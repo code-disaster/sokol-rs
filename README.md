@@ -4,6 +4,10 @@ _Experimental_ Rust bindings to the [sokol](https://github.com/floooh/sokol) hea
 
 > Work in progress! I'm adding wrapper functions as I go, while trying to port some of the [sokol samples](https://github.com/floooh/sokol-samples). Also, regarding the Rust language, I'm still a greenhorn, so I may adjust APIs frequently, or break things.
 
+## build
+
+As of today (Nov 2018), this version is configured to build with the _Rust 2018 edition_, so you'll need a Rust beta toolchain. It won't compile on _stable_ right now.
+
 ## status
 
 library | Rust bindings | notes
