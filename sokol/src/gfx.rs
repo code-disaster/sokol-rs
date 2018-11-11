@@ -100,7 +100,7 @@ mod ffi {
     pub struct SgDesc {
         _start_canary: u32,
         desc: super::SgDesc,
-        pub gl_force_gles2: bool,
+        gl_force_gles2: bool,
         mtl_device: *const c_void,
         mtl_renderpass_descriptor_cb: unsafe extern fn() -> *const c_void,
         mtl_drawable_cb: unsafe extern fn() -> *const c_void,
@@ -323,18 +323,18 @@ mod ffi {
 
     #[repr(C)]
     pub struct SgBlendState {
-        pub enabled: bool,
-        pub src_factor_rgb: super::SgBlendFactor,
-        pub dst_factor_rgb: super::SgBlendFactor,
-        pub op_rgb: super::SgBlendOp,
-        pub src_factor_alpha: super::SgBlendFactor,
-        pub dst_factor_alpha: super::SgBlendFactor,
-        pub op_alpha: super::SgBlendOp,
-        pub color_write_mask: u8,
-        pub color_attachment_count: c_int,
-        pub color_format: super::SgPixelFormat,
-        pub depth_format: super::SgPixelFormat,
-        pub blend_color: [f32; 4],
+        enabled: bool,
+        src_factor_rgb: super::SgBlendFactor,
+        dst_factor_rgb: super::SgBlendFactor,
+        op_rgb: super::SgBlendOp,
+        src_factor_alpha: super::SgBlendFactor,
+        dst_factor_alpha: super::SgBlendFactor,
+        op_alpha: super::SgBlendOp,
+        color_write_mask: u8,
+        color_attachment_count: c_int,
+        color_format: super::SgPixelFormat,
+        depth_format: super::SgPixelFormat,
+        blend_color: [f32; 4],
     }
 
     #[repr(C)]
@@ -488,6 +488,13 @@ pub struct SgContext {
     enums
 */
 
+#[derive(Debug)]
+pub enum SgApi {
+    Direct3D11,
+    Metal,
+    OpenGL33,
+}
+
 #[repr(C)]
 pub enum SgFeature {
     Instancing,
@@ -624,13 +631,6 @@ impl Default for SgPixelFormat {
     fn default() -> Self {
         SgPixelFormat::_Default
     }
-}
-
-#[derive(Debug)]
-pub enum SgApi {
-    Direct3D11,
-    Metal,
-    OpenGL33,
 }
 
 #[repr(C)]
@@ -863,10 +863,6 @@ bitflags! {
     }
 }
 
-/*
-    structs
-*/
-
 #[repr(C)]
 #[derive(Copy, Clone)]
 pub enum SgAction {
@@ -882,20 +878,15 @@ impl Default for SgAction {
     }
 }
 
+/*
+    structs
+*/
+
 #[repr(C)]
 #[derive(Copy, Clone, Default)]
 pub struct SgColorAttachmentAction {
     pub action: SgAction,
     pub val: [f32; 4],
-}
-
-impl SgColorAttachmentAction {
-    pub fn clear(rgba: [f32; 4]) -> SgColorAttachmentAction {
-        SgColorAttachmentAction {
-            action: SgAction::Clear,
-            val: rgba,
-        }
-    }
 }
 
 #[repr(C)]
@@ -919,7 +910,6 @@ pub struct SgPassAction {
     pub stencil: SgStencilAttachmentAction,
 }
 
-#[repr(C)]
 #[derive(Default)]
 pub struct SgDrawState {
     pub pipeline: SgPipeline,
@@ -1011,7 +1001,6 @@ pub struct SgDepthStencilState {
     pub stencil_ref: u8,
 }
 
-#[repr(C)]
 #[derive(Copy, Clone, Default)]
 pub struct SgBlendState {
     pub enabled: bool,
