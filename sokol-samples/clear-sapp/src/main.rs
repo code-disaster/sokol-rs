@@ -11,12 +11,15 @@ impl SappCallbacks for Clear {
     }
 
     fn sapp_frame(&mut self) {
-        let pass_action =
-            SgPassAction::color(
-                SgColorAttachmentAction::clear(
-                    [0.5, 0.0, 0.25, 1.0]
-                )
-            );
+        let pass_action = SgPassAction {
+            colors: vec!(
+                SgColorAttachmentAction {
+                    action: SgAction::Clear,
+                    val: [0.5, 0.0, 0.25, 1.0],
+                }
+            ),
+            ..Default::default()
+        };
 
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
         sg_end_pass();

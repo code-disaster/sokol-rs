@@ -12,7 +12,7 @@ mod ffi {
     const _SG_INVALID_ID: usize = 0;
     const _SG_NUM_SHADER_STAGES: usize = 2;
     const SG_NUM_INFLIGHT_FRAMES: usize = 2;
-    pub const SG_MAX_COLOR_ATTACHMENTS: usize = 4;
+    const SG_MAX_COLOR_ATTACHMENTS: usize = 4;
     const SG_MAX_SHADERSTAGE_BUFFERS: usize = 4;
     const SG_MAX_SHADERSTAGE_IMAGES: usize = 12;
     const SG_MAX_SHADERSTAGE_UBS: usize = 4;
@@ -22,19 +22,29 @@ mod ffi {
     const _SG_MAX_TEXTUREARRAY_LAYERS: usize = 128;
 
     #[repr(C)]
-    #[derive(Default)]
     pub struct SgPassAction {
         _start_canary: u32,
-        pass_action: super::SgPassAction,
+        colors: [super::SgColorAttachmentAction; SG_MAX_COLOR_ATTACHMENTS],
+        depth: super::SgDepthAttachmentAction,
+        stencil: super::SgStencilAttachmentAction,
         _end_canary: u32,
     }
 
     impl SgPassAction {
         pub fn make(pass_action: &super::SgPassAction) -> SgPassAction {
-            SgPassAction {
-                pass_action: *pass_action,
-                ..Default::default()
+            let mut pa = SgPassAction {
+                _start_canary: 0,
+                colors: Default::default(),
+                depth: pass_action.depth,
+                stencil: pass_action.stencil,
+                _end_canary: 0,
+            };
+
+            for (idx, color_action) in pass_action.colors.iter().enumerate() {
+                pa.colors[idx] = *color_action;
             }
+
+            pa
         }
     }
 
@@ -902,55 +912,11 @@ pub struct SgStencilAttachmentAction {
     pub val: u8,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Default)]
 pub struct SgPassAction {
-    pub colors: [SgColorAttachmentAction; ffi::SG_MAX_COLOR_ATTACHMENTS],
+    pub colors: Vec<SgColorAttachmentAction>,
     pub depth: SgDepthAttachmentAction,
     pub stencil: SgStencilAttachmentAction,
-}
-
-impl SgPassAction {
-    pub fn color(color: SgColorAttachmentAction) -> SgPassAction {
-        SgPassAction {
-            colors: [
-                color,
-                Default::default(),
-                Default::default(),
-                Default::default(),
-            ],
-            ..Default::default()
-        }
-    }
-
-    pub fn color_depth(color: SgColorAttachmentAction,
-                       depth: SgDepthAttachmentAction) -> SgPassAction {
-        SgPassAction {
-            colors: [
-                color,
-                Default::default(),
-                Default::default(),
-                Default::default(),
-            ],
-            depth,
-            ..Default::default()
-        }
-    }
-
-    pub fn color_depth_stencil(color: SgColorAttachmentAction,
-                               depth: SgDepthAttachmentAction,
-                               stencil: SgStencilAttachmentAction) -> SgPassAction {
-        SgPassAction {
-            colors: [
-                color,
-                Default::default(),
-                Default::default(),
-                Default::default(),
-            ],
-            depth,
-            stencil,
-        }
-    }
 }
 
 #[repr(C)]

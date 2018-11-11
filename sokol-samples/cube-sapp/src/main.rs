@@ -204,6 +204,12 @@ impl SappCallbacks for Cube {
                     sample_count: SAMPLE_COUNT,
                     ..Default::default()
                 },
+                /*blend: SgBlendState {
+                    //enabled: true,
+                    color_write_mask: SgColorMask::R | SgColorMask::G,
+                    //blend_color: [1.0, 1.0, 1.0, 1.0],
+                    ..Default::default()
+                },*/
                 ..Default::default()
             }
         );
@@ -217,12 +223,15 @@ impl SappCallbacks for Cube {
     }
 
     fn sapp_frame(&mut self) {
-        let pass_action =
-            SgPassAction::color(
-                SgColorAttachmentAction::clear(
-                    [0.25, 0.5, 0.75, 1.0]
-                )
-            );
+        let pass_action = SgPassAction {
+            colors: vec!(
+                SgColorAttachmentAction {
+                    action: SgAction::Clear,
+                    val: [0.25, 0.5, 0.75, 1.0],
+                }
+            ),
+            ..Default::default()
+        };
 
         let w: f32 = sapp_width() as f32;
         let h: f32 = sapp_height() as f32;
