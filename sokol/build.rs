@@ -1,8 +1,12 @@
 extern crate cc;
 
+use std::env;
+
 fn main() {
     let mut build = cc::Build::new();
     let tool = build.try_get_compiler();
+
+    let is_debug = env::var("DEBUG").ok().is_some();
 
     let is_msvc = match &tool {
         Ok(tool) => {
@@ -63,8 +67,10 @@ fn main() {
         }
     }
 
-    if cfg!(build = "debug") {
-        build.flag("-DSOKOL_DEBUG");
+    if is_debug {
+        build
+            .flag("-D_DEBUG")
+            .flag("-DSOKOL_DEBUG");
     }
 
     build
