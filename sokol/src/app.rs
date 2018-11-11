@@ -1,6 +1,5 @@
 use std::env;
 use std::ffi::CString;
-use std::mem::transmute;
 use std::os::raw::c_char;
 use std::os::raw::c_int;
 use std::os::raw::c_void;
@@ -54,7 +53,7 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> Desc {
+    extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> Desc {
         let app = super::SappImpl::get();
 
         let desc = /*unsafe*/ {
@@ -127,7 +126,7 @@ struct SappImpl {
 }
 
 impl SappImpl {
-    fn new<S: SappCallbacks + 'static>(callbacks: S, desc: SappDesc) -> Self {
+    fn new<S: SappCallbacks + 'static>(callbacks: S, desc: SappDesc) -> SappImpl {
         let window_title = CString::new(desc.window_title).unwrap();
 
         SappImpl {
@@ -151,13 +150,12 @@ impl SappImpl {
     }
 
     pub fn get() -> &'static mut SappImpl {
-        let cb: &mut &mut SappImpl = unsafe {
-            let ptr = ffi::sapp_get_user_ptr();
-            let cb: &mut &mut SappImpl = transmute(ptr);
-            cb
+        let app = unsafe {
+            let app_ptr = ffi::sapp_get_user_ptr() as *mut SappImpl;
+            &mut *app_ptr
         };
 
-        cb
+        app
     }
 }
 
@@ -166,10 +164,9 @@ pub fn sapp_main<S: SappCallbacks + 'static>(callbacks: S,
     let app = SappImpl::new(callbacks, desc);
 
     {
+        let app_ptr = &app as *const SappImpl;
         unsafe {
-            let cb = &&app;
-            let ptr: *mut c_void = transmute(cb);
-            ffi::sapp_set_user_ptr(ptr);
+            ffi::sapp_set_user_ptr(app_ptr as *mut c_void);
         }
     }
 
