@@ -312,6 +312,22 @@ mod ffi {
     }
 
     #[repr(C)]
+    pub struct SgBlendState {
+        pub enabled: bool,
+        pub src_factor_rgb: super::SgBlendFactor,
+        pub dst_factor_rgb: super::SgBlendFactor,
+        pub op_rgb: super::SgBlendOp,
+        pub src_factor_alpha: super::SgBlendFactor,
+        pub dst_factor_alpha: super::SgBlendFactor,
+        pub op_alpha: super::SgBlendOp,
+        pub color_write_mask: u8,
+        pub color_attachment_count: c_int,
+        pub color_format: super::SgPixelFormat,
+        pub depth_format: super::SgPixelFormat,
+        pub blend_color: [f32; 4],
+    }
+
+    #[repr(C)]
     pub struct SgPipelineDesc {
         _start_canary: u32,
         layout: SgLayoutDesc,
@@ -319,13 +335,15 @@ mod ffi {
         primitive_type: super::SgPrimitiveType,
         index_type: super::SgIndexType,
         depth_stencil: super::SgDepthStencilState,
-        blend: super::SgBlendState,
+        blend: SgBlendState,
         rasterizer: super::SgRasterizerState,
         _end_canary: u32,
     }
 
     impl SgPipelineDesc {
         pub fn make(desc: &super::SgPipelineDesc) -> SgPipelineDesc {
+            let blend = desc.blend;
+
             let mut pip = SgPipelineDesc {
                 _start_canary: 0,
                 layout: Default::default(),
@@ -333,7 +351,20 @@ mod ffi {
                 primitive_type: (*desc).primitive_type,
                 index_type: (*desc).index_type,
                 depth_stencil: (*desc).depth_stencil,
-                blend: (*desc).blend,
+                blend: SgBlendState {
+                    enabled: blend.enabled,
+                    src_factor_rgb: blend.src_factor_rgb,
+                    dst_factor_rgb: blend.dst_factor_rgb,
+                    op_rgb: blend.op_rgb,
+                    src_factor_alpha: blend.src_factor_alpha,
+                    dst_factor_alpha: blend.dst_factor_alpha,
+                    op_alpha: blend.op_alpha,
+                    color_write_mask: blend.color_write_mask.bits(),
+                    color_attachment_count: blend.color_attachment_count,
+                    color_format: blend.color_format,
+                    depth_format: blend.depth_format,
+                    blend_color: blend.blend_color,
+                },
                 rasterizer: (*desc).rasterizer,
                 _end_canary: 0,
             };
@@ -809,19 +840,18 @@ impl Default for SgBlendOp {
     }
 }
 
-/*
-#[repr(C)]
-pub enum SgColorMask {
-    _SG_COLORMASK_DEFAULT = 0,
-    SG_COLORMASK_NONE = (0x10),
-    SG_COLORMASK_R = (1 << 0),
-    SG_COLORMASK_G = (1 << 1),
-    SG_COLORMASK_B = (1 << 2),
-    SG_COLORMASK_A = (1 << 3),
-    SG_COLORMASK_RGB = 0x7,
-    SG_COLORMASK_RGBA = 0xF,
+bitflags! {
+    #[derive(Default)]
+    pub struct SgColorMask: u8 {
+        const None = 0x10;
+        const R = 0x01;
+        const G = 0x02;
+        const B = 0x04;
+        const A = 0x08;
+        const RGB = 0x07;
+        const RGBA = 0x0f;
+    }
 }
-*/
 
 /*
     structs
@@ -1025,7 +1055,7 @@ pub struct SgBlendState {
     pub src_factor_alpha: SgBlendFactor,
     pub dst_factor_alpha: SgBlendFactor,
     pub op_alpha: SgBlendOp,
-    pub color_write_mask: u8,
+    pub color_write_mask: SgColorMask,
     pub color_attachment_count: i32,
     pub color_format: SgPixelFormat,
     pub depth_format: SgPixelFormat,
