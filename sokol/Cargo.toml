@@ -1,0 +1,12 @@
+[package]
+name = "sokol"
+version = "0.1.0"
+authors = ["Daniel Ludwig <codi@code-disaster.com>"]
+edition = "2018"
+
+build = "build.rs"
+
+[dependencies]
+
+[build-dependencies]
+cc = "1.0.25"
