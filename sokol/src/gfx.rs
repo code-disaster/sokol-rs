@@ -18,7 +18,7 @@ mod ffi {
     const SG_MAX_SHADERSTAGE_UBS: usize = 4;
     const SG_MAX_UB_MEMBERS: usize = 16;
     const SG_MAX_VERTEX_ATTRIBUTES: usize = 16;
-    const _SG_MAX_MIPMAPS: usize = 16;
+    const SG_MAX_MIPMAPS: usize = 16;
     const _SG_MAX_TEXTUREARRAY_LAYERS: usize = 128;
 
     #[repr(C)]
@@ -159,6 +159,107 @@ mod ffi {
                 d3d11_buffer: null(),
                 _end_canary: 0,
             }
+        }
+    }
+
+    #[repr(C)]
+    #[derive(Copy, Clone)]
+    struct SgSubImageContent {
+        ptr: *const c_void,
+        size: c_int,
+    }
+
+    impl Default for SgSubImageContent {
+        fn default() -> Self {
+            Self {
+                ptr: null(),
+                size: 0,
+            }
+        }
+    }
+
+    #[repr(C)]
+    struct SgImageContent {
+        subimage: [SgSubImageContent; 6 * SG_MAX_MIPMAPS],
+    }
+
+    impl Default for SgImageContent {
+        fn default() -> Self {
+            Self {
+                subimage: [
+                    SgSubImageContent {
+                        ..Default::default()
+                    }; 96
+                ]
+            }
+        }
+    }
+
+    #[repr(C)]
+    pub struct SgImageDesc {
+        _start_canary: u32,
+        image_type: super::SgImageType,
+        render_target: bool,
+        width: c_int,
+        height: c_int,
+        depth_or_layers: c_int,
+        num_mipmaps: c_int,
+        usage: super::SgUsage,
+        pixel_format: super::SgPixelFormat,
+        sample_count: c_int,
+        min_filter: super::SgFilter,
+        mag_filter: super::SgFilter,
+        wrap_u: super::SgWrap,
+        wrap_v: super::SgWrap,
+        wrap_w: super::SgWrap,
+        max_anisotropy: u32,
+        min_lod: f32,
+        max_lod: f32,
+        content: SgImageContent,
+        gl_textures: [u32; SG_NUM_INFLIGHT_FRAMES],
+        mtl_textures: [*const c_void; SG_NUM_INFLIGHT_FRAMES],
+        d3d11_texture: *const c_void,
+        _end_canary: u32,
+    }
+
+    impl SgImageDesc {
+        pub fn make<T>(content: &Vec<(T, i32)>, desc: &super::SgImageDesc) -> SgImageDesc {
+            let mut img = SgImageDesc {
+                _start_canary: 0,
+                image_type: desc.image_type,
+                render_target: false,
+                width: desc.width,
+                height: desc.height,
+                depth_or_layers: desc.depth_or_layers,
+                num_mipmaps: desc.num_mipmaps,
+                usage: desc.usage,
+                pixel_format: desc.pixel_format,
+                sample_count: desc.sample_count,
+                min_filter: desc.min_filter,
+                mag_filter: desc.mag_filter,
+                wrap_u: desc.wrap_u,
+                wrap_v: desc.wrap_v,
+                wrap_w: desc.wrap_w,
+                max_anisotropy: desc.max_anisotropy,
+                min_lod: desc.min_lod,
+                max_lod: desc.max_lod,
+                content: Default::default(),
+                gl_textures: [0; SG_NUM_INFLIGHT_FRAMES],
+                mtl_textures: [null(); SG_NUM_INFLIGHT_FRAMES],
+                d3d11_texture: null(),
+                _end_canary: 0,
+            };
+
+            for (idx, (data, size)) in content.iter().enumerate() {
+                let ptr = data as *const T;
+
+                img.content.subimage[idx] = SgSubImageContent {
+                    ptr: ptr as *const c_void,
+                    size: *size as i32,
+                };
+            }
+
+            img
         }
     }
 
@@ -414,17 +515,49 @@ mod ffi {
         }
     }
 
+    #[repr(C)]
+    pub struct SgPassDesc {
+        _start_canary: u32,
+        color_attachments: [super::SgAttachmentDesc; SG_MAX_COLOR_ATTACHMENTS],
+        depth_stencil_attachment: super::SgAttachmentDesc,
+        _end_canary: u32,
+    }
+
+    impl SgPassDesc {
+        pub fn make(desc: &super::SgPassDesc) -> SgPassDesc {
+            let mut pass = SgPassDesc {
+                _start_canary: 0,
+                color_attachments: Default::default(),
+                depth_stencil_attachment: desc.depth_stencil_attachment,
+                _end_canary: 0,
+            };
+
+            for (idx, att) in desc.color_attachments.iter().enumerate() {
+                pass.color_attachments[idx] = *att;
+            }
+
+            pass
+        }
+    }
+
     extern {
         pub fn sg_setup(desc: *const SgDesc);
         pub fn sg_shutdown();
+        pub fn sg_isvalid() -> bool;
+        pub fn sg_query_feature(feature: super::SgFeature) -> bool;
+        pub fn sg_reset_state_cache();
 
         pub fn sg_make_buffer(desc: *const SgBufferDesc) -> super::SgBuffer;
-        pub fn sg_make_pipeline(desc: *const SgPipelineDesc) -> super::SgPipeline;
+        pub fn sg_make_image(desc: *const SgImageDesc) -> super::SgImage;
         pub fn sg_make_shader(desc: *const SgShaderDesc) -> super::SgShader;
+        pub fn sg_make_pipeline(desc: *const SgPipelineDesc) -> super::SgPipeline;
+        pub fn sg_make_pass(desc: *const SgPassDesc) -> super::SgPass;
 
         pub fn sg_destroy_buffer(buf: super::SgBuffer);
-        pub fn sg_destroy_pipeline(pip: super::SgPipeline);
+        pub fn sg_destroy_image(img: super::SgImage);
         pub fn sg_destroy_shader(shd: super::SgShader);
+        pub fn sg_destroy_pipeline(pip: super::SgPipeline);
+        pub fn sg_destroy_pass(pass: super::SgPass);
 
         pub fn sg_apply_draw_state(ds: *const SgDrawState);
         pub fn sg_apply_uniform_block(stage: super::SgShaderStage,
@@ -941,6 +1074,27 @@ pub struct SgBufferDesc {
 }
 
 #[derive(Default)]
+pub struct SgImageDesc {
+    pub image_type: SgImageType,
+    pub render_target: bool,
+    pub width: i32,
+    pub height: i32,
+    pub depth_or_layers: i32,
+    pub num_mipmaps: i32,
+    pub usage: SgUsage,
+    pub pixel_format: SgPixelFormat,
+    pub sample_count: i32,
+    pub min_filter: SgFilter,
+    pub mag_filter: SgFilter,
+    pub wrap_u: SgWrap,
+    pub wrap_v: SgWrap,
+    pub wrap_w: SgWrap,
+    pub max_anisotropy: u32,
+    pub min_lod: f32,
+    pub max_lod: f32,
+}
+
+#[derive(Default)]
 pub struct SgShaderUniformDesc<'a> {
     pub name: &'a str,
     pub uniform_type: SgUniformType,
@@ -1056,6 +1210,36 @@ pub struct SgPipelineDesc<'a> {
     pub rasterizer: SgRasterizerState,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub union SgAttachmentDescValue {
+    pub face: i32,
+    pub layer: i32,
+    pub slice: i32,
+}
+
+impl Default for SgAttachmentDescValue {
+    fn default() -> Self {
+        Self {
+            face: 0,
+        }
+    }
+}
+
+#[repr(C)]
+#[derive(Copy, Clone, Default)]
+pub struct SgAttachmentDesc {
+    pub image: SgImage,
+    pub mip_level: i32,
+    pub u: SgAttachmentDescValue,
+}
+
+#[derive(Default)]
+pub struct SgPassDesc {
+    pub color_attachments: Vec<SgAttachmentDesc>,
+    pub depth_stencil_attachment: SgAttachmentDesc,
+}
+
 /*
     functions
 */
@@ -1087,15 +1271,33 @@ pub fn sg_shutdown() {
     }
 }
 
+pub fn sg_isvalid() -> bool {
+    unsafe {
+        ffi::sg_isvalid()
+    }
+}
+
+pub fn sg_query_feature(feature: SgFeature) -> bool {
+    unsafe {
+        ffi::sg_query_feature(feature)
+    }
+}
+
+pub fn sg_reset_state_cache() {
+    unsafe {
+        ffi::sg_reset_state_cache();
+    }
+}
+
 pub fn sg_make_buffer<T>(content: &T, desc: &SgBufferDesc) -> SgBuffer {
     unsafe {
         ffi::sg_make_buffer(&ffi::SgBufferDesc::make(content, desc))
     }
 }
 
-pub fn sg_make_pipeline(desc: &SgPipelineDesc) -> SgPipeline {
+pub fn sg_make_image<T>(content: &Vec<(T, i32)>, desc: &SgImageDesc) -> SgImage {
     unsafe {
-        ffi::sg_make_pipeline(&ffi::SgPipelineDesc::make(desc))
+        ffi::sg_make_image(&ffi::SgImageDesc::make(content, desc))
     }
 }
 
@@ -1105,9 +1307,33 @@ pub fn sg_make_shader(desc: &SgShaderDesc) -> SgShader {
     }
 }
 
+pub fn sg_make_pipeline(desc: &SgPipelineDesc) -> SgPipeline {
+    unsafe {
+        ffi::sg_make_pipeline(&ffi::SgPipelineDesc::make(desc))
+    }
+}
+
+pub fn sg_make_pass(desc: &SgPassDesc) -> SgPass {
+    unsafe {
+        ffi::sg_make_pass(&ffi::SgPassDesc::make(desc))
+    }
+}
+
 pub fn sg_destroy_buffer(buf: SgBuffer) {
     unsafe {
         ffi::sg_destroy_buffer(buf);
+    }
+}
+
+pub fn sg_destroy_image(img: SgImage) {
+    unsafe {
+        ffi::sg_destroy_image(img);
+    }
+}
+
+pub fn sg_destroy_shader(shd: SgShader) {
+    unsafe {
+        ffi::sg_destroy_shader(shd);
     }
 }
 
@@ -1117,9 +1343,9 @@ pub fn sg_destroy_pipeline(pip: SgPipeline) {
     }
 }
 
-pub fn sg_destroy_shader(shd: SgShader) {
+pub fn sg_destroy_pass(pass: SgPass) {
     unsafe {
-        ffi::sg_destroy_shader(shd);
+        ffi::sg_destroy_pass(pass);
     }
 }
 
