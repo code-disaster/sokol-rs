@@ -5,6 +5,7 @@ use std::os::raw::c_int;
 use std::os::raw::c_void;
 
 pub mod ffi {
+    use std::ffi::CString;
     use std::os::raw::c_char;
     use std::os::raw::c_int;
     use std::os::raw::c_void;
@@ -45,7 +46,7 @@ pub mod ffi {
         premultiplied_alpha: bool,
         preserve_drawing_buffer: bool,
         window_title: *const c_char,
-        html5_canvas_name: *const u8,
+        html5_canvas_name: *const c_char,
         html5_canvas_resize: bool,
         ios_keyboard_resizes_canvas: bool,
         gl_force_gles2: bool,
@@ -55,33 +56,33 @@ pub mod ffi {
     #[no_mangle]
     extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> Desc {
         let app = super::SappImpl::get();
+        let desc = &app.desc;
 
-        let desc = /*unsafe*/ {
-            Desc {
-                init_cb,
-                frame_cb,
-                cleanup_cb,
-                event_cb,
-                fail_cb,
-                width: app.width,
-                height: app.height,
-                sample_count: 0,
-                swap_interval: 0,
-                high_dpi: false,
-                fullscreen: false,
-                alpha: false,
-                premultiplied_alpha: false,
-                preserve_drawing_buffer: false,
-                window_title: app.window_title.as_ptr() as *const c_char,
-                html5_canvas_name: "\0".as_ptr(),
-                html5_canvas_resize: false,
-                ios_keyboard_resizes_canvas: false,
-                gl_force_gles2: false,
-                user_cursor: false,
-            }
-        };
+        let window_title = CString::new(&*desc.window_title).unwrap();
+        let canvas_name = CString::new(&*desc.html5_canvas_name).unwrap();
 
-        desc
+        Desc {
+            init_cb,
+            frame_cb,
+            cleanup_cb,
+            event_cb,
+            fail_cb,
+            width: desc.width,
+            height: desc.height,
+            sample_count: desc.sample_count,
+            swap_interval: desc.swap_interval,
+            high_dpi: desc.high_dpi,
+            fullscreen: desc.fullscreen,
+            alpha: desc.alpha,
+            premultiplied_alpha: desc.premultiplied_alpha,
+            preserve_drawing_buffer: desc.preserve_drawing_buffer,
+            window_title: window_title.into_raw(),
+            html5_canvas_name: canvas_name.into_raw(),
+            html5_canvas_resize: desc.html5_canvas_resize,
+            ios_keyboard_resizes_canvas: desc.ios_keyboard_resizes_canvas,
+            gl_force_gles2: desc.gl_force_gles2,
+            user_cursor: desc.user_cursor,
+        }
     }
 
     #[no_mangle]
@@ -106,10 +107,23 @@ pub mod ffi {
     extern fn fail_cb(_message: *const c_char) {}
 }
 
+#[derive(Default)]
 pub struct SappDesc {
     pub width: i32,
     pub height: i32,
+    pub sample_count: i32,
+    pub swap_interval: i32,
+    pub high_dpi: bool,
+    pub fullscreen: bool,
+    pub alpha: bool,
+    pub premultiplied_alpha: bool,
+    pub preserve_drawing_buffer: bool,
     pub window_title: String,
+    pub html5_canvas_name: String,
+    pub html5_canvas_resize: bool,
+    pub ios_keyboard_resizes_canvas: bool,
+    pub gl_force_gles2: bool,
+    pub user_cursor: bool,
 }
 
 pub trait SappCallbacks {
@@ -120,20 +134,14 @@ pub trait SappCallbacks {
 
 struct SappImpl {
     callbacks: Box<SappCallbacks>,
-    pub width: i32,
-    pub height: i32,
-    pub window_title: CString,
+    desc: SappDesc,
 }
 
 impl SappImpl {
     fn new<S: SappCallbacks + 'static>(callbacks: S, desc: SappDesc) -> SappImpl {
-        let window_title = CString::new(desc.window_title).unwrap();
-
         SappImpl {
             callbacks: Box::new(callbacks),
-            width: desc.width,
-            height: desc.height,
-            window_title,
+            desc,
         }
     }
 

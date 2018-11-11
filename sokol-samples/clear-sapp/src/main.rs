@@ -39,6 +39,7 @@ fn main() {
             width: 800,
             height: 600,
             window_title: title,
+            ..Default::default()
         });
 
     std::process::exit(exit_code);

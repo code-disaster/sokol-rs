@@ -241,7 +241,7 @@ impl SappCallbacks for Cube {
         let rym = Matrix4::from_angle_y(Deg(self.ry));
         let model = rxm * rym;
 
-        let mvp = array4x4(view_proj * model);
+        let mvp: [[f32; 4]; 4] = array4x4(view_proj * model);
 
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
         sg_apply_draw_state(&self.draw_state);
@@ -272,7 +272,9 @@ fn main() {
         SappDesc {
             width: 800,
             height: 600,
+            sample_count: SAMPLE_COUNT,
             window_title: title,
+            ..Default::default()
         },
     );
 
