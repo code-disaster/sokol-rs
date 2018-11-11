@@ -137,11 +137,13 @@ mod ffi {
     }
 
     impl SgBufferDesc {
-        pub fn make<T>(content: &[T], desc: &super::SgBufferDesc) -> SgBufferDesc {
+        pub fn make<T>(content: &T, desc: &super::SgBufferDesc) -> SgBufferDesc {
+            let ptr = content as *const T;
+
             SgBufferDesc {
                 _start_canary: 0,
                 desc: *desc,
-                content: content.as_ptr() as *const c_void,
+                content: ptr as *const c_void,
                 gl_buffers: [0, 0],
                 mtl_buffers: [null(), null()],
                 d3d11_buffer: null(),
@@ -587,7 +589,7 @@ impl Default for SgPixelFormat {
 pub enum SgApi {
     Direct3D11,
     Metal,
-    OpenGL33
+    OpenGL33,
 }
 
 #[repr(C)]
@@ -1100,7 +1102,7 @@ pub fn sg_shutdown() {
     }
 }
 
-pub fn sg_make_buffer<T>(content: &[T], desc: &SgBufferDesc) -> SgBuffer {
+pub fn sg_make_buffer<T>(content: &T, desc: &SgBufferDesc) -> SgBuffer {
     unsafe {
         ffi::sg_make_buffer(&ffi::SgBufferDesc::make(content, desc))
     }
@@ -1144,12 +1146,14 @@ pub fn sg_apply_draw_state(ds: &SgDrawState) {
 
 pub fn sg_apply_uniform_block<T>(stage: SgShaderStage,
                                  ub_index: i32,
-                                 data: &[T],
+                                 data: &T,
                                  num_bytes: i32) {
+    let ptr = data as *const T;
+
     unsafe {
         ffi::sg_apply_uniform_block(stage,
                                     ub_index,
-                                    data.as_ptr() as *const c_void,
+                                    ptr as *const c_void,
                                     num_bytes);
     }
 }
