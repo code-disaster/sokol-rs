@@ -268,7 +268,7 @@ impl SappCallbacks for MRT {
                     attrs: vec!(
                         SgVertexAttrDesc {
                             name: "position",
-                            sem_name: "POS",
+                            sem_name: "POSITION",
                             format: SgVertexFormat::Float3,
                             offset: 0,
                             ..Default::default()
