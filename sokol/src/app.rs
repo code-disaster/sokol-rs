@@ -11,18 +11,9 @@ pub mod ffi {
     use std::os::raw::c_int;
     use std::os::raw::c_void;
 
-    const SAPP_MAX_TOUCHPOINTS: usize = 8;
+    pub const SAPP_MAX_TOUCHPOINTS: usize = 8;
     const _SAPP_MAX_MOUSEBUTTONS: usize = 3;
     const _SAPP_MAX_KEYCODES: usize = 512;
-
-    #[repr(C)]
-    #[derive(Copy, Clone)]
-    struct SappTouchPoint {
-        identifier: usize,
-        pos_x: f32,
-        pos_y: f32,
-        changed: bool,
-    }
 
     #[repr(C)]
     #[derive(Copy, Clone)]
@@ -38,7 +29,7 @@ pub mod ffi {
         scroll_x: f32,
         scroll_y: f32,
         num_touches: c_int,
-        touches: [SappTouchPoint; SAPP_MAX_TOUCHPOINTS],
+        touches: [super::SappTouchPoint; SAPP_MAX_TOUCHPOINTS],
         window_width: c_int,
         window_height: c_int,
         framebuffer_width: c_int,
@@ -85,11 +76,14 @@ pub mod ffi {
         pub fn sapp_metal_get_device() -> *const c_void;
         pub fn sapp_metal_get_renderpass_descriptor() -> *const c_void;
         pub fn sapp_metal_get_drawable() -> *const c_void;
+        pub fn sapp_macos_get_window() -> *const c_void;
+        pub fn sapp_ios_get_window() -> *const c_void;
 
         pub fn sapp_d3d11_get_device() -> *const c_void;
         pub fn sapp_d3d11_get_device_context() -> *const c_void;
         pub fn sapp_d3d11_get_render_target_view() -> *const c_void;
         pub fn sapp_d3d11_get_depth_stencil_view() -> *const c_void;
+        pub fn sapp_win32_get_hwnd() -> *const c_void;
 
         pub fn sapp_set_user_ptr(ptr: *mut c_void);
         pub fn sapp_get_user_ptr() -> *mut c_void;
@@ -159,6 +153,8 @@ pub mod ffi {
             mouse_y: e.mouse_y,
             scroll_x: e.scroll_x,
             scroll_y: e.scroll_y,
+            num_touches: e.num_touches,
+            touches: e.touches,
             window_width: e.window_width,
             window_height: e.window_height,
             framebuffer_width: e.framebuffer_width,
@@ -345,6 +341,15 @@ bitflags! {
     }
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SappTouchPoint {
+    pub identifier: usize,
+    pub pos_x: f32,
+    pub pos_y: f32,
+    pub changed: bool,
+}
+
 pub struct SappEvent {
     pub event_type: SappEventType,
     pub frame_count: u32,
@@ -356,8 +361,8 @@ pub struct SappEvent {
     pub mouse_y: f32,
     pub scroll_x: f32,
     pub scroll_y: f32,
-    //pub num_touches: i32,
-    //pub touches: [SappTouchPoint; SAPP_MAX_TOUCHPOINTS],
+    pub num_touches: i32,
+    pub touches: [SappTouchPoint; ffi::SAPP_MAX_TOUCHPOINTS],
     pub window_width: i32,
     pub window_height: i32,
     pub framebuffer_width: i32,
