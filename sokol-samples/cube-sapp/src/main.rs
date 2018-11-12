@@ -261,6 +261,8 @@ impl SappCallbacks for Cube {
     fn sapp_cleanup(&mut self) {
         sg_shutdown();
     }
+
+    fn sapp_event(&mut self, _event: SappEvent) {}
 }
 
 fn main() {

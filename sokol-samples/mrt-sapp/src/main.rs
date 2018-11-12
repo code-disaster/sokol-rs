@@ -659,6 +659,12 @@ impl SappCallbacks for MRT {
     fn sapp_cleanup(&mut self) {
         sg_shutdown();
     }
+
+    fn sapp_event(&mut self, event: SappEvent) {
+        if event.event_type == SappEventType::Resized {
+            self.create_offscreen_pass(event.framebuffer_width, event.framebuffer_height);
+        }
+    }
 }
 
 fn main() {
