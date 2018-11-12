@@ -179,7 +179,7 @@ mod ffi {
     }
 
     #[repr(C)]
-    struct SgImageContent {
+    pub struct SgImageContent {
         subimage: [SgSubImageContent; 6 * SG_MAX_MIPMAPS],
     }
 
@@ -192,6 +192,25 @@ mod ffi {
                     }; 96
                 ]
             }
+        }
+    }
+
+    impl SgImageContent {
+        pub fn make<T>(content: &Vec<(T, i32)>) -> SgImageContent {
+            let mut cnt = SgImageContent {
+                ..Default::default()
+            };
+
+            for (idx, (data, size)) in content.iter().enumerate() {
+                let ptr = data as *const T;
+
+                cnt.subimage[idx] = SgSubImageContent {
+                    ptr: ptr as *const c_void,
+                    size: *size as i32,
+                };
+            }
+
+            cnt
         }
     }
 
@@ -224,7 +243,7 @@ mod ffi {
 
     impl SgImageDesc {
         pub fn make<T>(content: &Vec<(T, i32)>, desc: &super::SgImageDesc) -> SgImageDesc {
-            let mut img = SgImageDesc {
+            SgImageDesc {
                 _start_canary: 0,
                 image_type: desc.image_type,
                 render_target: desc.render_target,
@@ -243,23 +262,12 @@ mod ffi {
                 max_anisotropy: desc.max_anisotropy,
                 min_lod: desc.min_lod,
                 max_lod: desc.max_lod,
-                content: Default::default(),
+                content: SgImageContent::make(content),
                 gl_textures: [0; SG_NUM_INFLIGHT_FRAMES],
                 mtl_textures: [null(); SG_NUM_INFLIGHT_FRAMES],
                 d3d11_texture: null(),
                 _end_canary: 0,
-            };
-
-            for (idx, (data, size)) in content.iter().enumerate() {
-                let ptr = data as *const T;
-
-                img.content.subimage[idx] = SgSubImageContent {
-                    ptr: ptr as *const c_void,
-                    size: *size as i32,
-                };
             }
-
-            img
         }
     }
 
@@ -574,14 +582,16 @@ mod ffi {
         pub fn sg_destroy_pipeline(pip: super::SgPipeline);
         pub fn sg_destroy_pass(pass: super::SgPass);
 
-        pub fn sg_apply_draw_state(ds: *const SgDrawState);
-        pub fn sg_apply_uniform_block(stage: super::SgShaderStage,
-                                      ub_index: c_int,
-                                      data: *const c_void,
-                                      num_bytes: c_int);
-        pub fn sg_draw(base_element: c_int,
-                       num_elements: c_int,
-                       num_instances: c_int);
+        pub fn sg_update_buffer(buf: super::SgBuffer, data_ptr: *const c_void, data_size: c_int);
+        pub fn sg_update_image(img: super::SgImage, data: *const SgImageContent);
+        pub fn sg_append_buffer(buf: super::SgBuffer, data_ptr: *const c_void, data_size: c_int) -> c_int;
+        pub fn sg_query_buffer_overflow(buf: super::SgBuffer) -> bool;
+
+        pub fn sg_query_buffer_state(buf: super::SgBuffer) -> super::SgResourceState;
+        pub fn sg_query_image_state(img: super::SgImage) -> super::SgResourceState;
+        pub fn sg_query_shader_state(shd: super::SgShader) -> super::SgResourceState;
+        pub fn sg_query_pipeline_state(pip: super::SgPipeline) -> super::SgResourceState;
+        pub fn sg_query_pass_state(pass: super::SgPass) -> super::SgResourceState;
 
         pub fn sg_begin_default_pass(pass_action: *const SgPassAction,
                                      width: c_int,
@@ -591,6 +601,17 @@ mod ffi {
         pub fn sg_apply_viewport(x: c_int, y: c_int,
                                  width: c_int, height: c_int,
                                  origin_top_left: bool);
+        pub fn sg_apply_scissor_rect(x: c_int, y: c_int,
+                                     width: c_int, height: c_int,
+                                     origin_top_left: bool);
+        pub fn sg_apply_draw_state(ds: *const SgDrawState);
+        pub fn sg_apply_uniform_block(stage: super::SgShaderStage,
+                                      ub_index: c_int,
+                                      data: *const c_void,
+                                      num_bytes: c_int);
+        pub fn sg_draw(base_element: c_int,
+                       num_elements: c_int,
+                       num_instances: c_int);
         pub fn sg_end_pass();
 
         pub fn sg_commit();
@@ -1369,6 +1390,93 @@ pub fn sg_destroy_pass(pass: SgPass) {
     }
 }
 
+pub fn sg_update_buffer<T>(buf: SgBuffer, content: &T, content_size: i32) {
+    unsafe {
+        let ptr = content as *const T;
+        ffi::sg_update_buffer(buf, ptr as *const c_void, content_size);
+    }
+}
+
+pub fn sg_update_image<T>(img: SgImage, content: &Vec<(T, i32)>) {
+    unsafe {
+        ffi::sg_update_image(img, &ffi::SgImageContent::make(content));
+    }
+}
+
+pub fn sg_append_buffer<T>(buf: SgBuffer, content: &T, content_size: i32) -> i32 {
+    unsafe {
+        let ptr = content as *const T;
+        ffi::sg_append_buffer(buf, ptr as *const c_void, content_size)
+    }
+}
+
+pub fn sg_query_buffer_overflow(buf: SgBuffer) -> bool {
+    unsafe {
+        ffi::sg_query_buffer_overflow(buf)
+    }
+}
+
+pub fn sg_query_buffer_state(buf: SgBuffer) -> SgResourceState {
+    unsafe {
+        ffi::sg_query_buffer_state(buf)
+    }
+}
+
+pub fn sg_query_image_state(img: SgImage) -> SgResourceState {
+    unsafe {
+        ffi::sg_query_image_state(img)
+    }
+}
+
+pub fn sg_query_shader_state(shd: SgShader) -> SgResourceState {
+    unsafe {
+        ffi::sg_query_shader_state(shd)
+    }
+}
+
+pub fn sg_query_pipeline_state(pip: SgPipeline) -> SgResourceState {
+    unsafe {
+        ffi::sg_query_pipeline_state(pip)
+    }
+}
+
+pub fn sg_query_pass_state(pass: SgPass) -> SgResourceState {
+    unsafe {
+        ffi::sg_query_pass_state(pass)
+    }
+}
+
+pub fn sg_begin_default_pass(pass_action: &SgPassAction, width: i32, height: i32) {
+    let action = ffi::SgPassAction::make(pass_action);
+    unsafe {
+        ffi::sg_begin_default_pass(&action, width, height);
+    }
+}
+
+pub fn sg_begin_pass(pass: &SgPass,
+                     pass_action: &SgPassAction) {
+    let action = ffi::SgPassAction::make(pass_action);
+    unsafe {
+        ffi::sg_begin_pass(pass.clone(), &action);
+    }
+}
+
+pub fn sg_apply_viewport(x: i32, y: i32,
+                         width: i32, height: i32,
+                         origin_top_left: bool) {
+    unsafe {
+        ffi::sg_apply_viewport(x, y, width, height, origin_top_left);
+    }
+}
+
+pub fn sg_apply_scissor_rect(x: i32, y: i32,
+                             width: i32, height: i32,
+                             origin_top_left: bool) {
+    unsafe {
+        ffi::sg_apply_scissor_rect(x, y, width, height, origin_top_left);
+    }
+}
+
 pub fn sg_apply_draw_state(ds: &SgDrawState) {
     unsafe {
         ffi::sg_apply_draw_state(&ffi::SgDrawState::make(ds));
@@ -1394,29 +1502,6 @@ pub fn sg_draw(base_element: i32,
                num_instances: i32) {
     unsafe {
         ffi::sg_draw(base_element, num_elements, num_instances);
-    }
-}
-
-pub fn sg_begin_default_pass(pass_action: &SgPassAction, width: i32, height: i32) {
-    let action = ffi::SgPassAction::make(pass_action);
-    unsafe {
-        ffi::sg_begin_default_pass(&action, width, height);
-    }
-}
-
-pub fn sg_begin_pass(pass: &SgPass,
-                     pass_action: &SgPassAction) {
-    let action = ffi::SgPassAction::make(pass_action);
-    unsafe {
-        ffi::sg_begin_pass(pass.clone(), &action);
-    }
-}
-
-pub fn sg_apply_viewport(x: i32, y: i32,
-                         width: i32, height: i32,
-                         origin_top_left: bool) {
-    unsafe {
-        ffi::sg_apply_viewport(x, y, width, height, origin_top_left);
     }
 }
 
