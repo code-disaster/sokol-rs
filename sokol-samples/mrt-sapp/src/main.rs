@@ -143,12 +143,70 @@ impl SappCallbacks for MRT {
 
         let (cube_vs_src, cube_fs_src) = match sg_api() {
             SgApi::Direct3D11 => (
-                "",
-                ""
+                "cbuffer params: register(b0) {
+                  float4x4 mvp;
+                };
+                struct vs_in {
+                  float4 pos: POSITION;
+                  float bright: BRIGHT;
+                };
+                struct vs_out {
+                  float bright: BRIGHT;
+                  float4 pos: SV_Position;
+                };
+                vs_out main(vs_in inp) {
+                  vs_out outp;
+                  outp.pos = mul(mvp, inp.pos);
+                  outp.bright = inp.bright;
+                  return outp;
+                }",
+                "struct fs_out {
+                  float4 c0: SV_Target0;
+                  float4 c1: SV_Target1;
+                  float4 c2: SV_Target2;
+                };
+                fs_out main(float b: BRIGHT) {
+                  fs_out outp;
+                  outp.c0 = float4(b, 0.0, 0.0, 1.0);
+                  outp.c1 = float4(0.0, b, 0.0, 1.0);
+                  outp.c2 = float4(0.0, 0.0, b, 1.0);
+                  return outp;
+                }"
             ),
             SgApi::Metal => (
-                "",
-                ""
+                "#include <metal_stdlib>
+                using namespace metal;
+                struct params_t {
+                  float4x4 mvp;
+                };
+                struct vs_in {
+                  float4 pos [[attribute(0)]];
+                  float bright [[attribute(1)]];
+                };
+                struct vs_out {
+                  float4 pos [[position]];
+                  float bright;
+                };
+                vertex vs_out _main(vs_in in [[stage_in]], constant params_t& params [[buffer(0)]]) {
+                  vs_out out;
+                  out.pos = params.mvp * in.pos;
+                  out.bright = in.bright;
+                  return out;
+                }",
+                "#include <metal_stdlib>
+                using namespace metal;
+                struct fs_out {
+                  float4 color0 [[color(0)]];
+                  float4 color1 [[color(1)]];
+                  float4 color2 [[color(2)]];
+                };
+                fragment fs_out _main(float bright [[stage_in]]) {
+                  fs_out out;
+                  out.color0 = float4(bright, 0.0, 0.0, 1.0);
+                  out.color1 = float4(0.0, bright, 0.0, 1.0);
+                  out.color2 = float4(0.0, 0.0, bright, 1.0);
+                  return out;
+                }"
             ),
             SgApi::OpenGL33 => (
                 "#version 330
@@ -267,12 +325,85 @@ impl SappCallbacks for MRT {
 
         let (fsq_vs_src, fsq_fs_src) = match sg_api() {
             SgApi::Direct3D11 => (
-                "",
-                ""
+                "cbuffer params {
+                  float2 offset;
+                };
+                struct vs_in {
+                  float2 pos: POSITION;
+                };
+                struct vs_out {
+                  float2 uv0: TEXCOORD0;
+                  float2 uv1: TEXCOORD1;
+                  float2 uv2: TEXCOORD2;
+                  float4 pos: SV_Position;
+                };
+                vs_out main(vs_in inp) {
+                  vs_out outp;
+                  outp.pos = float4(inp.pos*2.0-1.0, 0.5, 1.0);
+                  outp.uv0 = inp.pos + float2(offset.x, 0.0);
+                  outp.uv1 = inp.pos + float2(0.0, offset.y);
+                  outp.uv2 = inp.pos;
+                  return outp;
+                }",
+                "Texture2D<float4> tex0: register(t0);
+                Texture2D<float4> tex1: register(t1);
+                Texture2D<float4> tex2: register(t2);
+                sampler smp0: register(s0);
+                sampler smp1: register(s1);
+                sampler smp2: register(s2);
+                struct fs_in {
+                  float2 uv0: TEXCOORD0;
+                  float2 uv1: TEXCOORD1;
+                  float2 uv2: TEXCOORD2;
+                };
+                float4 main(fs_in inp): SV_Target0 {
+                  float3 c0 = tex0.Sample(smp0, inp.uv0).xyz;
+                  float3 c1 = tex1.Sample(smp1, inp.uv1).xyz;
+                  float3 c2 = tex2.Sample(smp2, inp.uv2).xyz;
+                  float4 c = float4(c0 + c1 + c2, 1.0);
+                  return c;
+                }"
             ),
             SgApi::Metal => (
-                "",
-                ""
+                "#include <metal_stdlib>
+                using namespace metal;
+                struct params_t {
+                  float2 offset;
+                };
+                struct vs_in {
+                  float2 pos [[attribute(0)]];
+                };
+                struct vs_out {
+                  float4 pos [[position]];
+                  float2 uv0;
+                  float2 uv1;
+                  float2 uv2;
+                };
+                vertex vs_out _main(vs_in in [[stage_in]], constant params_t& params [[buffer(0)]]) {
+                  vs_out out;
+                  out.pos = float4(in.pos*2.0-1.0, 0.5, 1.0);
+                  out.uv0 = in.pos + float2(params.offset.x, 0.0);
+                  out.uv1 = in.pos + float2(0.0, params.offset.y);
+                  out.uv2 = in.pos;
+                  return out;
+                }",
+                "#include <metal_stdlib>
+                using namespace metal;
+                struct fs_in {
+                  float2 uv0;
+                  float2 uv1;
+                  float2 uv2;
+                };
+                fragment float4 _main(fs_in in [[stage_in]],
+                  texture2d<float> tex0 [[texture(0)]], sampler smp0 [[sampler(0)]],
+                  texture2d<float> tex1 [[texture(1)]], sampler smp1 [[sampler(1)]],
+                  texture2d<float> tex2 [[texture(2)]], sampler smp2 [[sampler(2)]])
+                {
+                  float3 c0 = tex0.sample(smp0, in.uv0).xyz;
+                  float3 c1 = tex1.sample(smp1, in.uv1).xyz;
+                  float3 c2 = tex2.sample(smp2, in.uv2).xyz;
+                  return float4(c0 + c1 + c2, 1.0);
+                }"
             ),
             SgApi::OpenGL33 => (
                 "#version 330
@@ -379,12 +510,46 @@ impl SappCallbacks for MRT {
 
         let (dbg_vs_src, dbg_fs_src) = match sg_api() {
             SgApi::Direct3D11 => (
-                "",
-                ""
+                "struct vs_in {
+                  float2 pos: POSITION;
+                };
+                struct vs_out {
+                  float2 uv: TEXCOORD0;
+                  float4 pos: SV_Position;
+                };
+                vs_out main(vs_in inp) {
+                  vs_out outp;
+                  outp.pos = float4(inp.pos*2.0-1.0, 0.5, 1.0);
+                  outp.uv = inp.pos;
+                  return outp;
+                }",
+                "Texture2D<float4> tex: register(t0);
+                sampler smp: register(s0);
+                float4 main(float2 uv: TEXCOORD0): SV_Target0 {
+                  return float4(tex.Sample(smp, uv).xyz, 1.0);
+                }"
             ),
             SgApi::Metal => (
-                "",
-                ""
+                "#include <metal_stdlib>
+                using namespace metal;
+                struct vs_in {
+                  float2 pos [[attribute(0)]];
+                };
+                struct vs_out {
+                  float4 pos [[position]];
+                  float2 uv;
+                };
+                vertex vs_out _main(vs_in in [[stage_in]]) {
+                  vs_out out;
+                  out.pos = float4(in.pos*2.0-1.0, 0.5, 1.0);
+                  out.uv = in.pos;
+                  return out;
+                }",
+                "#include <metal_stdlib>
+                using namespace metal;
+                fragment float4 _main(float2 uv [[stage_in]], texture2d<float> tex [[texture(0)]], sampler smp [[sampler(0)]]) {
+                  return float4(tex.sample(smp, uv).xyz, 1.0);
+                }"
             ),
             SgApi::OpenGL33 => (
                 "#version 330
