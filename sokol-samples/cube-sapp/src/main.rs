@@ -204,12 +204,6 @@ impl SappCallbacks for Cube {
                     sample_count: SAMPLE_COUNT,
                     ..Default::default()
                 },
-                /*blend: SgBlendState {
-                    //enabled: true,
-                    color_write_mask: SgColorMask::R | SgColorMask::G,
-                    //blend_color: [1.0, 1.0, 1.0, 1.0],
-                    ..Default::default()
-                },*/
                 ..Default::default()
             }
         );

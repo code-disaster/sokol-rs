@@ -4,4 +4,5 @@ members = [
     "sokol",
     "sokol-samples/clear-sapp",
     "sokol-samples/cube-sapp",
+    "sokol-samples/mrt-sapp",
 ]

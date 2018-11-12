@@ -227,7 +227,7 @@ mod ffi {
             let mut img = SgImageDesc {
                 _start_canary: 0,
                 image_type: desc.image_type,
-                render_target: false,
+                render_target: desc.render_target,
                 width: desc.width,
                 height: desc.height,
                 depth_or_layers: desc.depth_or_layers,
@@ -364,7 +364,10 @@ mod ffi {
             };
 
             SgShaderDesc::collect_uniform_blocks(&mut shd.vs, &desc.vs.uniform_blocks);
+            SgShaderDesc::collect_images(&mut shd.vs, &desc.vs.images);
+
             SgShaderDesc::collect_uniform_blocks(&mut shd.fs, &desc.fs.uniform_blocks);
+            SgShaderDesc::collect_images(&mut shd.fs, &desc.fs.images);
 
             shd
         }
@@ -388,6 +391,18 @@ mod ffi {
                 let dst = &mut desc.uniform_blocks[idx];
                 dst.size = ub.size;
                 SgShaderDesc::collect_uniforms(dst, &ub.uniforms);
+            }
+        }
+
+        fn collect_images(desc: &mut SgShaderStageDesc,
+                          src: &Vec<super::SgShaderImageDesc>) {
+            for (idx, img) in src.iter().enumerate() {
+                let dst = &mut desc.images[idx];
+
+                let name = CString::new(img.name).unwrap();
+
+                dst.name = name.into_raw();
+                dst.image_type = img.image_type;
             }
         }
     }
@@ -571,6 +586,11 @@ mod ffi {
         pub fn sg_begin_default_pass(pass_action: *const SgPassAction,
                                      width: c_int,
                                      height: c_int);
+        pub fn sg_begin_pass(pass: super::SgPass,
+                             pass_action: *const SgPassAction);
+        pub fn sg_apply_viewport(x: c_int, y: c_int,
+                                 width: c_int, height: c_int,
+                                 origin_top_left: bool);
         pub fn sg_end_pass();
 
         pub fn sg_commit();
@@ -1381,6 +1401,22 @@ pub fn sg_begin_default_pass(pass_action: &SgPassAction, width: i32, height: i32
     let action = ffi::SgPassAction::make(pass_action);
     unsafe {
         ffi::sg_begin_default_pass(&action, width, height);
+    }
+}
+
+pub fn sg_begin_pass(pass: &SgPass,
+                     pass_action: &SgPassAction) {
+    let action = ffi::SgPassAction::make(pass_action);
+    unsafe {
+        ffi::sg_begin_pass(pass.clone(), &action);
+    }
+}
+
+pub fn sg_apply_viewport(x: i32, y: i32,
+                         width: i32, height: i32,
+                         origin_top_left: bool) {
+    unsafe {
+        ffi::sg_apply_viewport(x, y, width, height, origin_top_left);
     }
 }
 
