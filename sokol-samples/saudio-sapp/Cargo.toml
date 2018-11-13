@@ -1,0 +1,8 @@
+[package]
+name = "saudio-sapp"
+version = "0.1.0"
+authors = ["Daniel Ludwig <codi@code-disaster.com>"]
+edition = "2018"
+
+[dependencies]
+sokol = { path = "../../sokol" }

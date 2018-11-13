@@ -61,9 +61,12 @@ fn main() {
         if !is_msvc {
             build
                 .flag("-D_WIN32_WINNT=0x0601")
-                .flag_if_supported("-Wno-cast-function-type");
+                .flag_if_supported("-Wno-cast-function-type")
+                .flag_if_supported("-Wno-sign-compare")
+                .flag_if_supported("-Wno-unknown-pragmas");
 
             println!("cargo:rustc-link-lib=static=gdi32");
+            println!("cargo:rustc-link-lib=static=ole32");
         }
     }
 
