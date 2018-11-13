@@ -12,10 +12,10 @@ As of today (Nov 2018), this version is configured to build with the _Rust 2018 
 
 library | Rust bindings | notes
 --- | --- | ---
-[sokol_app.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | mostly done |
+[sokol_app.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | done |
 [sokol_args.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | n/a | low priority - there are many cmdline parsers for Rust already
-[sokol_audio.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | n/a |
-[sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | partially done |
+[sokol_audio.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | mostly done | missing: callback API
+[sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | mostly done | missing: separate resource management, render contexts
 [sokol_time.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | done |
 
 ## remarks
