@@ -88,4 +88,13 @@ fn main() {
         println!("cargo:rustc-link-lib=framework=Metal");
         println!("cargo:rustc-link-lib=framework=MetalKit");
     }
+
+    //
+    // Linux: libs
+    //
+    if cfg!(target_os = "linux") {
+        println!("cargo:rustc-link-lib=dylib=GL");
+        println!("cargo:rustc-link-lib=dylib=X11");
+        println!("cargo:rustc-link-lib=dylib=asound");
+    }
 }
