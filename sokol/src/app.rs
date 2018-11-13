@@ -10,6 +10,7 @@ pub mod ffi {
     use std::os::raw::c_char;
     use std::os::raw::c_int;
     use std::os::raw::c_void;
+    use std::slice::from_raw_parts_mut;
 
     pub const SAPP_MAX_TOUCHPOINTS: usize = 8;
     const _SAPP_MAX_MOUSEBUTTONS: usize = 3;
@@ -169,6 +170,16 @@ pub mod ffi {
         };
 
         super::SappImpl::get().fail_cb(msg.to_str().unwrap());
+    }
+
+    #[no_mangle]
+    extern fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int) {
+        let arr = unsafe {
+            let len = num_frames * num_channels;
+            from_raw_parts_mut(buffer, len as usize)
+        };
+
+        super::SappImpl::get().stream_cb(arr, num_frames, num_channels);
     }
 }
 
@@ -397,6 +408,8 @@ pub trait SappCallbacks {
     fn sapp_fail(&mut self, msg: &str) {
         print!("{}", msg);
     }
+
+    fn saudio_stream(&mut self, _buffer: &mut [f32], _num_frames: i32, _num_channels: i32) {}
 }
 
 struct SappImpl {
@@ -430,6 +443,10 @@ impl SappImpl {
 
     pub fn fail_cb(&mut self, msg: &str) {
         self.callbacks.sapp_fail(msg);
+    }
+
+    pub fn stream_cb(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32) {
+        self.callbacks.saudio_stream(buffer, num_frames, num_channels);
     }
 
     pub fn get() -> &'static mut SappImpl {

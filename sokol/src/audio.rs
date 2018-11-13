@@ -9,7 +9,7 @@ pub mod ffi {
         buffer_frames: c_int,
         packet_frames: c_int,
         num_packets: c_int,
-        stream_cb: Option<extern fn(*mut f32, c_int, c_int)>,
+        stream_cb: Option<unsafe extern fn(*mut f32, c_int, c_int)>,
     }
 
     impl SAudioDesc {
@@ -20,7 +20,7 @@ pub mod ffi {
                 buffer_frames: desc.buffer_frames,
                 packet_frames: desc.packet_frames,
                 num_packets: desc.num_packets,
-                stream_cb: None,
+                stream_cb: if desc.use_stream_cb { Some(stream_cb) } else { None },
             }
         }
     }
@@ -37,17 +37,9 @@ pub mod ffi {
 
         pub fn saudio_set_user_ptr(ptr: *mut c_void);
         pub fn saudio_get_user_ptr() -> *mut c_void;
+
+        fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int);
     }
-
-    /*#[no_mangle]
-    extern fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int) {
-        let arr = unsafe {
-            let len = num_frames * num_channels;
-            from_raw_parts_mut(buffer, len as usize)
-        };
-
-        super::SAudioImpl::get().stream_cb(arr, num_frames, num_channels);
-    }*/
 }
 
 #[derive(Default)]
@@ -57,51 +49,14 @@ pub struct SAudioDesc {
     pub buffer_frames: i32,
     pub packet_frames: i32,
     pub num_packets: i32,
+    pub use_stream_cb: bool,
 }
 
 pub trait SAudioCallbacks {
     fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32);
 }
 
-/*struct SAudioImpl {
-    callbacks: Box<&'static mut SAudioCallbacks>,
-}
-
-impl SAudioImpl {
-    fn new<S: SAudioCallbacks + 'static>(callbacks: &'static mut S) -> SAudioImpl {
-        let x: Box<&'static mut SAudioCallbacks> = Box::new(callbacks);
-        SAudioImpl {
-            callbacks: x,
-        }
-    }
-
-    pub fn stream_cb(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32) {
-        self.callbacks.saudio_stream(buffer, num_frames, num_channels);
-    }
-
-    pub fn get() -> &'static mut SAudioImpl {
-        let audio = unsafe {
-            let audio_ptr = ffi::saudio_get_user_ptr() as *mut SAudioImpl;
-            &mut *audio_ptr
-        };
-
-        audio
-    }
-}*/
-
-pub fn saudio_setup/*<S: SAudioCallbacks + 'static>(callbacks: &'static mut S,*/(desc: &SAudioDesc) {
-    /*match callbacks {
-        Some(callbacks) => unsafe {
-        let audio = SAudioImpl::new(callbacks);
-        let audio_ptr = &audio as *const SAudioImpl;
-        ffi::saudio_set_user_ptr(audio_ptr as *mut c_void);
-        mem::forget(audio);
-    },
-        None => unsafe {
-            ffi::saudio_set_user_ptr(ptr::null_mut());
-        },
-    }*/
-
+pub fn saudio_setup(desc: &SAudioDesc) {
     unsafe {
         ffi::saudio_setup(&ffi::SAudioDesc::make(desc));
     }
@@ -111,13 +66,6 @@ pub fn saudio_shutdown() {
     unsafe {
         ffi::saudio_shutdown();
     }
-
-    /*unsafe {
-        let audio_ptr = ffi::saudio_get_user_ptr();
-        if audio_ptr == ptr::null_mut() {
-            let _audio = SAudioImpl::get();
-        }
-    }*/
 }
 
 pub fn saudio_isvalid() -> bool {

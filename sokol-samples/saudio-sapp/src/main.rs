@@ -16,6 +16,7 @@ impl SappCallbacks for SAudio {
             ..Default::default()
         });
         saudio_setup(&SAudioDesc {
+            use_stream_cb: true,
             ..Default::default()
         });
     }
@@ -33,6 +34,9 @@ impl SappCallbacks for SAudio {
 
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
 
+        //
+        // this block is only used if use_stream_cb = false (push mode)
+        //
         let num_frames = saudio_expect();
         let mut s: f32;
         for _i in 0..num_frames {
@@ -60,13 +64,26 @@ impl SappCallbacks for SAudio {
     }
 
     fn sapp_event(&mut self, _event: SappEvent) {}
-}
 
-/*impl SAudioCallbacks for SAudio {
     fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32) {
-        unimplemented!()
+        //
+        // this function is only called if use_stream_cb = true (callback mode)
+        //
+        let mut s: f32;
+        let mut even_odd = 0;
+        let mut sample_pos = 0;
+        for _i in 0..num_frames {
+            if (even_odd & (1 << 5)) != 0 {
+                s = 0.05;
+            } else {
+                s = -0.05;
+            }
+            even_odd += 1;
+            buffer[sample_pos as usize] = s;
+            sample_pos += 1;
+        }
     }
-}*/
+}
 
 fn main() {
     let saudio_app = SAudio {
