@@ -52,10 +52,6 @@ pub struct SAudioDesc {
     pub use_stream_cb: bool,
 }
 
-pub trait SAudioCallbacks {
-    fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32);
-}
-
 pub fn saudio_setup(desc: &SAudioDesc) {
     unsafe {
         ffi::saudio_setup(&ffi::SAudioDesc::make(desc));

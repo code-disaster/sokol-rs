@@ -65,7 +65,7 @@ impl SappCallbacks for SAudio {
 
     fn sapp_event(&mut self, _event: SappEvent) {}
 
-    fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32) {
+    fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, _num_channels: i32) {
         //
         // this function is only called if use_stream_cb = true (callback mode)
         //
