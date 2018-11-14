@@ -80,7 +80,7 @@ impl MRT {
     }
 }
 
-impl SappCallbacks for MRT {
+impl SApp for MRT {
     fn sapp_init(&mut self) {
         sg_setup(&SgDesc {
             ..Default::default()
@@ -660,8 +660,8 @@ impl SappCallbacks for MRT {
         sg_shutdown();
     }
 
-    fn sapp_event(&mut self, event: SappEvent) {
-        if event.event_type == SappEventType::Resized {
+    fn sapp_event(&mut self, event: SAppEvent) {
+        if event.event_type == SAppEventType::Resized {
             self.create_offscreen_pass(event.framebuffer_width, event.framebuffer_height);
         }
     }
@@ -702,7 +702,7 @@ fn main() {
 
     let exit_code = sapp_main(
         mrt_app,
-        SappDesc {
+        SAppDesc {
             width: 800,
             height: 600,
             sample_count: MSAA_SAMPLES,

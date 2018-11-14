@@ -3,7 +3,7 @@ use sokol::gfx::*;
 
 struct Clear {}
 
-impl SappCallbacks for Clear {
+impl SApp for Clear {
     fn sapp_init(&mut self) {
         sg_setup(&SgDesc {
             ..Default::default()
@@ -30,7 +30,7 @@ impl SappCallbacks for Clear {
         sg_shutdown();
     }
 
-    fn sapp_event(&mut self, _event: SappEvent) {
+    fn sapp_event(&mut self, _event: SAppEvent) {
 
     }
 }
@@ -42,7 +42,7 @@ fn main() {
 
     let exit_code = sapp_main(
         clear_app,
-        SappDesc {
+        SAppDesc {
             width: 800,
             height: 600,
             window_title: title,

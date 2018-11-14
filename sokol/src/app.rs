@@ -18,19 +18,19 @@ pub mod ffi {
 
     #[repr(C)]
     #[derive(Copy, Clone)]
-    struct SappEvent {
-        event_type: super::SappEventType,
+    struct SAppEvent {
+        event_type: super::SAppEventType,
         frame_count: u32,
-        key_code: super::SappKeycode,
+        key_code: super::SAppKeycode,
         char_code: u32,
-        modifiers: super::SappModifier,
-        mouse_button: super::SappMouseButton,
+        modifiers: super::SAppModifier,
+        mouse_button: super::SAppMouseButton,
         mouse_x: f32,
         mouse_y: f32,
         scroll_x: f32,
         scroll_y: f32,
         num_touches: c_int,
-        touches: [super::SappTouchPoint; SAPP_MAX_TOUCHPOINTS],
+        touches: [super::SAppTouchPoint; SAPP_MAX_TOUCHPOINTS],
         window_width: c_int,
         window_height: c_int,
         framebuffer_width: c_int,
@@ -38,11 +38,11 @@ pub mod ffi {
     }
 
     #[repr(C)]
-    pub struct Desc {
+    pub struct SAppDesc {
         init_cb: extern fn(),
         frame_cb: extern fn(),
         cleanup_cb: extern fn(),
-        event_cb: extern fn(*const SappEvent),
+        event_cb: extern fn(*const SAppEvent),
         fail_cb: extern fn(*const c_char),
         width: c_int,
         height: c_int,
@@ -91,14 +91,14 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> Desc {
-        let app = super::SappImpl::get();
+    extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> SAppDesc {
+        let app = super::SAppImpl::get();
         let desc = &app.desc;
 
         let window_title = CString::new(&*desc.window_title).unwrap();
         let canvas_name = CString::new(&*desc.html5_canvas_name).unwrap();
 
-        Desc {
+        SAppDesc {
             init_cb,
             frame_cb,
             cleanup_cb,
@@ -124,26 +124,26 @@ pub mod ffi {
 
     #[no_mangle]
     extern fn init_cb() {
-        super::SappImpl::get().init_cb();
+        super::SAppImpl::get().init_cb();
     }
 
     #[no_mangle]
     extern fn frame_cb() {
-        super::SappImpl::get().frame_cb();
+        super::SAppImpl::get().frame_cb();
     }
 
     #[no_mangle]
     extern fn cleanup_cb() {
-        super::SappImpl::get().cleanup_cb();
+        super::SAppImpl::get().cleanup_cb();
     }
 
     #[no_mangle]
-    extern fn event_cb(event: *const SappEvent) {
+    extern fn event_cb(event: *const SAppEvent) {
         let e = unsafe {
             &*event
         }.clone();
 
-        super::SappImpl::get().event_cb(super::SappEvent {
+        super::SAppImpl::get().event_cb(super::SAppEvent {
             event_type: e.event_type,
             frame_count: e.frame_count,
             key_code: e.key_code,
@@ -169,7 +169,7 @@ pub mod ffi {
             CStr::from_ptr(message)
         };
 
-        super::SappImpl::get().fail_cb(msg.to_str().unwrap());
+        super::SAppImpl::get().fail_cb(msg.to_str().unwrap());
     }
 
     #[no_mangle]
@@ -179,13 +179,13 @@ pub mod ffi {
             from_raw_parts_mut(buffer, len as usize)
         };
 
-        super::SappImpl::get().stream_cb(arr, num_frames, num_channels);
+        super::SAppImpl::get().stream_cb(arr, num_frames, num_channels);
     }
 }
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq)]
-pub enum SappEventType {
+pub enum SAppEventType {
     Invalid,
     KeyDown,
     KeyUp,
@@ -210,7 +210,7 @@ pub enum SappEventType {
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq)]
-pub enum SappKeycode {
+pub enum SAppKeycode {
     KeyInvalid = 0,
     KeySpace = 32,
     KeyApostrophe = 39,
@@ -336,7 +336,7 @@ pub enum SappKeycode {
 
 #[repr(C)]
 #[derive(Copy, Clone, PartialEq)]
-pub enum SappMouseButton {
+pub enum SAppMouseButton {
     Invalid = -1,
     Left = 0,
     Right = 1,
@@ -344,7 +344,7 @@ pub enum SappMouseButton {
 }
 
 bitflags! {
-    pub struct SappModifier: u32 {
+    pub struct SAppModifier: u32 {
         const Shift = 0x01;
         const Control = 0x02;
         const Alt = 0x04;
@@ -354,26 +354,26 @@ bitflags! {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub struct SappTouchPoint {
+pub struct SAppTouchPoint {
     pub identifier: usize,
     pub pos_x: f32,
     pub pos_y: f32,
     pub changed: bool,
 }
 
-pub struct SappEvent {
-    pub event_type: SappEventType,
+pub struct SAppEvent {
+    pub event_type: SAppEventType,
     pub frame_count: u32,
-    pub key_code: SappKeycode,
+    pub key_code: SAppKeycode,
     pub char_code: u32,
-    pub modifiers: SappModifier,
-    pub mouse_button: SappMouseButton,
+    pub modifiers: SAppModifier,
+    pub mouse_button: SAppMouseButton,
     pub mouse_x: f32,
     pub mouse_y: f32,
     pub scroll_x: f32,
     pub scroll_y: f32,
     pub num_touches: i32,
-    pub touches: [SappTouchPoint; ffi::SAPP_MAX_TOUCHPOINTS],
+    pub touches: [SAppTouchPoint; ffi::SAPP_MAX_TOUCHPOINTS],
     pub window_width: i32,
     pub window_height: i32,
     pub framebuffer_width: i32,
@@ -381,7 +381,7 @@ pub struct SappEvent {
 }
 
 #[derive(Default)]
-pub struct SappDesc {
+pub struct SAppDesc {
     pub width: i32,
     pub height: i32,
     pub sample_count: i32,
@@ -399,11 +399,11 @@ pub struct SappDesc {
     pub user_cursor: bool,
 }
 
-pub trait SappCallbacks {
+pub trait SApp {
     fn sapp_init(&mut self);
     fn sapp_frame(&mut self);
     fn sapp_cleanup(&mut self);
-    fn sapp_event(&mut self, event: SappEvent);
+    fn sapp_event(&mut self, event: SAppEvent);
 
     fn sapp_fail(&mut self, msg: &str) {
         print!("{}", msg);
@@ -412,14 +412,14 @@ pub trait SappCallbacks {
     fn saudio_stream(&mut self, _buffer: &mut [f32], _num_frames: i32, _num_channels: i32) {}
 }
 
-struct SappImpl {
-    callbacks: Box<SappCallbacks>,
-    desc: SappDesc,
+struct SAppImpl {
+    callbacks: Box<SApp>,
+    desc: SAppDesc,
 }
 
-impl SappImpl {
-    fn new<S: SappCallbacks + 'static>(callbacks: S, desc: SappDesc) -> SappImpl {
-        SappImpl {
+impl SAppImpl {
+    fn new<S: SApp + 'static>(callbacks: S, desc: SAppDesc) -> SAppImpl {
+        SAppImpl {
             callbacks: Box::new(callbacks),
             desc,
         }
@@ -437,7 +437,7 @@ impl SappImpl {
         self.callbacks.sapp_cleanup();
     }
 
-    pub fn event_cb(&mut self, event: SappEvent) {
+    pub fn event_cb(&mut self, event: SAppEvent) {
         self.callbacks.sapp_event(event);
     }
 
@@ -449,9 +449,9 @@ impl SappImpl {
         self.callbacks.saudio_stream(buffer, num_frames, num_channels);
     }
 
-    pub fn get() -> &'static mut SappImpl {
+    pub fn get() -> &'static mut SAppImpl {
         let app = unsafe {
-            let app_ptr = ffi::sapp_get_user_ptr() as *mut SappImpl;
+            let app_ptr = ffi::sapp_get_user_ptr() as *mut SAppImpl;
             &mut *app_ptr
         };
 
@@ -459,12 +459,12 @@ impl SappImpl {
     }
 }
 
-pub fn sapp_main<S: SappCallbacks + 'static>(callbacks: S,
-                                             desc: SappDesc) -> i32 {
-    let app = SappImpl::new(callbacks, desc);
+pub fn sapp_main<S: SApp + 'static>(callbacks: S,
+                                    desc: SAppDesc) -> i32 {
+    let app = SAppImpl::new(callbacks, desc);
 
     {
-        let app_ptr = &app as *const SappImpl;
+        let app_ptr = &app as *const SAppImpl;
         unsafe {
             ffi::sapp_set_user_ptr(app_ptr as *mut c_void);
         }

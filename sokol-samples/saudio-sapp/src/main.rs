@@ -10,7 +10,7 @@ struct SAudio {
     samples: [f32; NUM_SAMPLES],
 }
 
-impl SappCallbacks for SAudio {
+impl SApp for SAudio {
     fn sapp_init(&mut self) {
         sg_setup(&SgDesc {
             ..Default::default()
@@ -63,7 +63,7 @@ impl SappCallbacks for SAudio {
         sg_shutdown();
     }
 
-    fn sapp_event(&mut self, _event: SappEvent) {}
+    fn sapp_event(&mut self, _event: SAppEvent) {}
 
     fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, _num_channels: i32) {
         //
@@ -96,7 +96,7 @@ fn main() {
 
     let exit_code = sapp_main(
         saudio_app,
-        SappDesc {
+        SAppDesc {
             width: 800,
             height: 600,
             window_title: title,

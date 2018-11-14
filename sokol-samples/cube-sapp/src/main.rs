@@ -15,7 +15,7 @@ struct Cube {
     ry: f32,
 }
 
-impl SappCallbacks for Cube {
+impl SApp for Cube {
     fn sapp_init(&mut self) {
         sg_setup(&SgDesc {
             ..Default::default()
@@ -262,7 +262,7 @@ impl SappCallbacks for Cube {
         sg_shutdown();
     }
 
-    fn sapp_event(&mut self, _event: SappEvent) {}
+    fn sapp_event(&mut self, _event: SAppEvent) {}
 }
 
 fn main() {
@@ -274,7 +274,7 @@ fn main() {
 
     let exit_code = sapp_main(
         cube,
-        SappDesc {
+        SAppDesc {
             width: 800,
             height: 600,
             sample_count: SAMPLE_COUNT,
