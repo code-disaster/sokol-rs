@@ -2,6 +2,10 @@
 name = "sokol"
 version = "0.1.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
+description = "Native bindings to the sokol header-only, cross-platform C libraries."
+repository = "https://github.com/code-disaster/sokol-rs"
+license = "zlib"
+
 edition = "2018"
 
 build = "build.rs"
