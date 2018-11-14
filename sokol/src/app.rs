@@ -23,7 +23,7 @@ pub mod ffi {
 
     #[repr(C)]
     #[derive(Copy, Clone)]
-    struct SAppEvent {
+    pub struct SAppEvent {
         event_type: super::SAppEventType,
         frame_count: u32,
         key_code: super::SAppKeycode,
@@ -96,7 +96,7 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> SAppDesc {
+    pub extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> SAppDesc {
         let app = super::SAppImpl::get();
         let desc = &app.desc;
 
@@ -128,22 +128,22 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    extern fn init_cb() {
+    pub extern fn init_cb() {
         super::SAppImpl::get().init_cb();
     }
 
     #[no_mangle]
-    extern fn frame_cb() {
+    pub extern fn frame_cb() {
         super::SAppImpl::get().frame_cb();
     }
 
     #[no_mangle]
-    extern fn cleanup_cb() {
+    pub extern fn cleanup_cb() {
         super::SAppImpl::get().cleanup_cb();
     }
 
     #[no_mangle]
-    extern fn event_cb(event: *const SAppEvent) {
+    pub extern fn event_cb(event: *const SAppEvent) {
         let e = unsafe {
             &*event
         }.clone();
@@ -169,7 +169,7 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    extern fn fail_cb(message: *const c_char) {
+    pub extern fn fail_cb(message: *const c_char) {
         let msg = unsafe {
             CStr::from_ptr(message)
         };
@@ -178,7 +178,7 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    extern fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int) {
+    pub extern fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int) {
         let arr = unsafe {
             let len = num_frames * num_channels;
             from_raw_parts_mut(buffer, len as usize)

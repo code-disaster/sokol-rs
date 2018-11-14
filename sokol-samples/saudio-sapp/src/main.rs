@@ -1,6 +1,26 @@
-use sokol::app::*;
-use sokol::audio::*;
-use sokol::gfx::*;
+extern crate sokol;
+
+use sokol::app::SApp;
+use sokol::app::sapp_height;
+use sokol::app::sapp_main;
+use sokol::app::sapp_width;
+use sokol::app::SAppDesc;
+use sokol::app::SAppEvent;
+use sokol::audio::saudio_expect;
+use sokol::audio::saudio_push;
+use sokol::audio::saudio_setup;
+use sokol::audio::saudio_shutdown;
+use sokol::audio::SAudioDesc;
+use sokol::gfx::sg_api;
+use sokol::gfx::sg_begin_default_pass;
+use sokol::gfx::sg_commit;
+use sokol::gfx::sg_end_pass;
+use sokol::gfx::sg_setup;
+use sokol::gfx::sg_shutdown;
+use sokol::gfx::SgAction;
+use sokol::gfx::SgColorAttachmentAction;
+use sokol::gfx::SgDesc;
+use sokol::gfx::SgPassAction;
 
 const NUM_SAMPLES: usize = 32;
 

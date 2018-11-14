@@ -2,7 +2,6 @@
 name = "mrt-sapp"
 version = "0.1.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
-edition = "2018"
 
 [dependencies]
 cgmath = "0.16.1"

@@ -6,8 +6,6 @@ description = "Native bindings to the sokol header-only, cross-platform C librar
 repository = "https://github.com/code-disaster/sokol-rs"
 license = "zlib"
 
-edition = "2018"
-
 build = "build.rs"
 
 [dependencies]

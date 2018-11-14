@@ -1,10 +1,58 @@
+extern crate cgmath;
+extern crate sokol;
+
 use std::mem;
 
-use cgmath::*;
-use cgmath::conv::*;
+use cgmath::conv::array4x4;
+use cgmath::Deg;
+use cgmath::Matrix4;
+use cgmath::perspective;
+use cgmath::Point3;
+use cgmath::Vector3;
 
-use sokol::app::*;
-use sokol::gfx::*;
+use sokol::app::SApp;
+use sokol::app::sapp_height;
+use sokol::app::sapp_main;
+use sokol::app::sapp_width;
+use sokol::app::SAppDesc;
+use sokol::app::SAppEvent;
+use sokol::gfx::sg_api;
+use sokol::gfx::sg_apply_draw_state;
+use sokol::gfx::sg_apply_uniform_block;
+use sokol::gfx::sg_begin_default_pass;
+use sokol::gfx::sg_commit;
+use sokol::gfx::sg_draw;
+use sokol::gfx::sg_end_pass;
+use sokol::gfx::sg_make_buffer;
+use sokol::gfx::sg_make_pipeline;
+use sokol::gfx::sg_make_shader;
+use sokol::gfx::sg_setup;
+use sokol::gfx::sg_shutdown;
+use sokol::gfx::SgAction;
+use sokol::gfx::SgApi;
+use sokol::gfx::SgBufferDesc;
+use sokol::gfx::SgBufferLayoutDesc;
+use sokol::gfx::SgBufferType;
+use sokol::gfx::SgColorAttachmentAction;
+use sokol::gfx::SgCompareFunc;
+use sokol::gfx::SgCullMode;
+use sokol::gfx::SgDepthStencilState;
+use sokol::gfx::SgDesc;
+use sokol::gfx::SgDrawState;
+use sokol::gfx::SgIndexType;
+use sokol::gfx::SgLayoutDesc;
+use sokol::gfx::SgPassAction;
+use sokol::gfx::SgPipelineDesc;
+use sokol::gfx::SgRasterizerState;
+use sokol::gfx::SgShaderDesc;
+use sokol::gfx::SgShaderStage;
+use sokol::gfx::SgShaderStageDesc;
+use sokol::gfx::SgShaderUniformBlockDesc;
+use sokol::gfx::SgShaderUniformDesc;
+use sokol::gfx::SgUniformType;
+use sokol::gfx::SgUsage;
+use sokol::gfx::SgVertexAttrDesc;
+use sokol::gfx::SgVertexFormat;
 
 const SAMPLE_COUNT: i32 = 4;
 
