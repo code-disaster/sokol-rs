@@ -1,3 +1,8 @@
+//! sokol::audio - cross-platform audio-streaming API
+//!
+//! A Rust API to the [sokol_audio.h](https://github.com/floooh/sokol/blob/master/sokol_audio.h)
+//! header-only C library.
+
 pub mod ffi {
     use std::os::raw::c_int;
     use std::os::raw::c_void;

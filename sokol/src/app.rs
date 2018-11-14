@@ -1,3 +1,8 @@
+//! sokol::app - cross-platform application wrapper
+//!
+//! A Rust API to the [sokol_app.h](https://github.com/floooh/sokol/blob/master/sokol_app.h)
+//! header-only C library.
+
 use std::env;
 use std::ffi::CString;
 use std::os::raw::c_char;

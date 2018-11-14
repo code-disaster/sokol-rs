@@ -1,3 +1,8 @@
+//! sokol::gfx - simple 3D API wrapper
+//!
+//! A Rust API to the [sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_gfx.h)
+//! header-only C library.
+
 use std::os::raw::c_void;
 
 mod ffi {

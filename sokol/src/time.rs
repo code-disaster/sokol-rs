@@ -1,3 +1,8 @@
+//! sokol::time - simple cross-platform time measurement
+//!
+//! A Rust API to the [sokol_time.h](https://github.com/floooh/sokol/blob/master/sokol_time.h)
+//! header-only C library.
+
 mod ffi {
     extern {
         pub fn stm_setup();
