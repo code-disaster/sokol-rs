@@ -33,11 +33,11 @@ I tried to stay as close as possible to the source, but to adjust to the Rust na
 - Function signatures are identical _most of the time_. In some rare cases, I moved parameters out of structs and pass them as additional function parameters.
 - Type names are renamed, e.g. `sapp_desc` -> `SAppDesc`.
 - Some identifiers like `type` had to be renamed because they clash with reserved keywords in Rust.
-- Enum element names are shortened and changed to CamelCase, e.g. `sapp_event_type::SAPP_EVENTTYPE_RESIZED` becomes `SAppEventType::Resized`. On the plus side, they are all totally type safe now.
+- Enum element names are shortened and changed to CamelCase, e.g. `sapp_event_type::SAPP_EVENTTYPE_RESIZED` becomes `SAppEventType::Resized`. On the plus side, they are all totally type-safe now.
 - I tried to stay true to the C99-style struct initializers - check the samples to see what it looks like. Since Rust forces you to initialize __all__ struct members, most of them enable `#[derive(Default)]` so that you are still able to only set the options you are interested in - everything else can be initialized to sokol's default values (which is usually all zeros) with `..Default::default()`.
-- Arrays in structs, which are all fixed-sized in sokol, are initialized using `Vec<T>` in public definitions. This is because they can be set conveniently with `vec![]`, so you don't have to keep an eye on the array size, and/or spatter `Default::default()` all over the place. _(I tried to be clever and use macro magic to make this part even more convenient while not paying the Vec<> allocation overhead, but I'm not nearly clever enough with Rust... yet.)_
+- Arrays in structs, which are all fixed-sized in sokol, are initialized using `Vec<T>` in public declarations. This is because they can be set conveniently with `vec![]`, so you don't have to keep an eye on the array size, and/or spatter `Default::default()` all over the place. _(I tried to be clever and use macro magic to make this part even more convenient while not paying the Vec<> allocation overhead, but I'm not nearly clever enough with Rust... yet.)_
 
-In this library, the `app`, `gfx` and `audio` modules are not nearly as separable as their C counterparts. Essentially, sokol-rs assumes that you use them in conjunction.
+In this library, the `app`, `gfx` and `audio` modules are not as separable as their C counterparts. Essentially, sokol-rs assumes that you use them in conjunction.
 
 - `gfx::sg_setup()` uses `app` functions to configure the render backend.
 - If `audio` is configured to use callbacks, the function which gets called is part of the `SApp` trait (and, as a matter of fact, managed by the `app` module in most parts).
