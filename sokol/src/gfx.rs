@@ -105,7 +105,6 @@ mod ffi {
     pub struct SgDesc {
         _start_canary: u32,
         desc: super::SgDesc,
-        gl_force_gles2: bool,
         mtl_device: *const c_void,
         mtl_renderpass_descriptor_cb: unsafe extern fn() -> *const c_void,
         mtl_drawable_cb: unsafe extern fn() -> *const c_void,
@@ -124,7 +123,6 @@ mod ffi {
                 SgDesc {
                     _start_canary: 0,
                     desc: *desc,
-                    gl_force_gles2: false,
                     mtl_device: sapp_metal_get_device(),
                     mtl_renderpass_descriptor_cb: sapp_metal_get_renderpass_descriptor,
                     mtl_drawable_cb: sapp_metal_get_drawable,
@@ -1128,6 +1126,7 @@ pub struct SgDesc {
     pub pipeline_pool_size: i32,
     pub pass_pool_size: i32,
     pub context_pool_size: i32,
+    pub gl_force_gles2: bool,
 }
 
 #[repr(C)]
