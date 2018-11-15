@@ -485,7 +485,8 @@ pub fn sapp_main<S: SApp + 'static>(callbacks: S,
         arg.as_ptr()
     }).collect();
 
-    // copy desc, invoke native main() function
+    // invoke native main() function (renamed to main_c() at compile time to
+    // not conflict with Rust's main())
 
     unsafe {
         ffi::main_c(c_args.len() as c_int, c_args.as_ptr())

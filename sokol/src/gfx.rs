@@ -735,8 +735,8 @@ impl Default for SgBufferType {
 pub enum SgIndexType {
     _Default,
     None,
-    U16,
-    U32,
+    UInt16,
+    UInt32,
 }
 
 impl Default for SgIndexType {
@@ -749,10 +749,10 @@ impl Default for SgIndexType {
 #[derive(Copy, Clone)]
 pub enum SgImageType {
     _Default,
-    _2D,
-    Cube,
-    _3D,
-    Array,
+    Texture2D,
+    TextureCube,
+    Texture3D,
+    TextureArray,
 }
 
 impl Default for SgImageType {
@@ -773,8 +773,8 @@ pub enum SgCubeFace {
 
 #[repr(C)]
 pub enum SgShaderStage {
-    VS,
-    FS,
+    Vertex,
+    Fragment,
 }
 
 #[repr(C)]
@@ -785,9 +785,9 @@ pub enum SgPixelFormat {
     RGBA8,
     RGB8,
     RGBA4,
-    R5G6B5,
-    R5G5B5A1,
-    R10G10B10A2,
+    RGB5,
+    RGB5A1,
+    RGB10A2,
     RGBA32F,
     RGBA16F,
     R32F,
@@ -796,8 +796,8 @@ pub enum SgPixelFormat {
     DXT1,
     DXT3,
     DXT5,
-    DEPTH,
-    DEPTHSTENCIL,
+    Depth,
+    DepthStencil,
     PVRTC2RGB,
     PVRTC4RGB,
     PVRTC2RGBA,
@@ -853,7 +853,7 @@ pub enum SgWrap {
     _Default,
     Repeat,
     ClampToEdge,
-    MirroredRepeat,
+    MirrorRepeat,
 }
 
 impl Default for SgWrap {
@@ -878,7 +878,7 @@ pub enum SgVertexFormat {
     Short2N,
     Short4,
     Short4N,
-    UINT10N2,
+    UInt10N2,
 }
 
 impl Default for SgVertexFormat {
@@ -974,11 +974,11 @@ pub enum SgStencilOp {
     Keep,
     Zero,
     Replace,
-    IncrClamp,
-    DecrClamp,
+    IncrementClamp,
+    DecrementClamp,
     Invert,
-    IncrWrap,
-    DecrWrap,
+    IncrementWrap,
+    DecrementWrap,
 }
 
 impl Default for SgStencilOp {

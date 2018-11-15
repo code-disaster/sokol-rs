@@ -241,7 +241,7 @@ impl SApp for Cube {
                     ),
                 },
                 shader: shd,
-                index_type: SgIndexType::U16,
+                index_type: SgIndexType::UInt16,
                 depth_stencil: SgDepthStencilState {
                     depth_compare_func: SgCompareFunc::LessEqual,
                     depth_write_enabled: true,
@@ -297,7 +297,7 @@ impl SApp for Cube {
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
         sg_apply_draw_state(&self.draw_state);
         sg_apply_uniform_block(
-            SgShaderStage::VS,
+            SgShaderStage::Vertex,
             0,
             &mvp,
             64);

@@ -115,7 +115,7 @@ impl MRT {
             ..Default::default()
         };
         let depth_img_desc = SgImageDesc {
-            pixel_format: SgPixelFormat::DEPTH,
+            pixel_format: SgPixelFormat::Depth,
             ..color_img_desc
         };
         self.offscreen_pass_desc = SgPassDesc {
@@ -350,7 +350,7 @@ impl SApp for MRT {
                     ),
                 },
                 shader: cube_shd,
-                index_type: SgIndexType::U16,
+                index_type: SgIndexType::UInt16,
                 depth_stencil: SgDepthStencilState {
                     depth_compare_func: SgCompareFunc::LessEqual,
                     depth_write_enabled: true,
@@ -359,7 +359,7 @@ impl SApp for MRT {
                 blend: SgBlendState {
                     color_attachment_count: 3,
                     color_format: SgPixelFormat::RGBA8,
-                    depth_format: SgPixelFormat::DEPTH,
+                    depth_format: SgPixelFormat::Depth,
                     ..Default::default()
                 },
                 rasterizer: SgRasterizerState {
@@ -525,15 +525,15 @@ impl SApp for MRT {
                     images: vec![
                         SgShaderImageDesc {
                             name: "tex0",
-                            image_type: SgImageType::_2D,
+                            image_type: SgImageType::Texture2D,
                         },
                         SgShaderImageDesc {
                             name: "tex1",
-                            image_type: SgImageType::_2D,
+                            image_type: SgImageType::Texture2D,
                         },
                         SgShaderImageDesc {
                             name: "tex2",
-                            image_type: SgImageType::_2D,
+                            image_type: SgImageType::Texture2D,
                         },
                     ],
                     ..Default::default()
@@ -660,7 +660,7 @@ impl SApp for MRT {
                         images: vec![
                             SgShaderImageDesc {
                                 name: "tex",
-                                image_type: SgImageType::_2D,
+                                image_type: SgImageType::Texture2D,
                             },
                         ],
                         ..Default::default()
@@ -699,7 +699,7 @@ impl SApp for MRT {
 
         sg_begin_pass(&self.offscreen_pass, &self.offscreen_pass_action);
         sg_apply_draw_state(&self.offscreen_draw_state);
-        sg_apply_uniform_block(SgShaderStage::VS, 0, &mvp, 64);
+        sg_apply_uniform_block(SgShaderStage::Vertex, 0, &mvp, 64);
         sg_draw(0, 36, 1);
         sg_end_pass();
 
@@ -709,7 +709,7 @@ impl SApp for MRT {
 
         sg_begin_default_pass(&self.default_pass_action, sapp_width(), sapp_height());
         sg_apply_draw_state(&self.fsq_draw_state);
-        sg_apply_uniform_block(SgShaderStage::VS, 0, &offset, 8);
+        sg_apply_uniform_block(SgShaderStage::Vertex, 0, &offset, 8);
         sg_draw(0, 4, 1);
 
         for i in 0..3 {
