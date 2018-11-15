@@ -29,6 +29,8 @@ impl SApp for Clear {
     }
 
     fn sapp_frame(&mut self) {
+        let g = self.pass_action.colors[0].val[1] + 0.01;
+        self.pass_action.colors[0].val[1] = if g > 1.0 { 0.0 } else { g };
         sg_begin_default_pass(&self.pass_action, sapp_width(), sapp_height());
         sg_end_pass();
         sg_commit();
@@ -47,7 +49,7 @@ fn main() {
             colors: vec!(
                 SgColorAttachmentAction {
                     action: SgAction::Clear,
-                    val: [0.5, 0.0, 0.25, 1.0],
+                    val: [1.0, 0.0, 0.0, 1.0],
                 }
             ),
             ..Default::default()
@@ -59,8 +61,9 @@ fn main() {
     let exit_code = sapp_main(
         clear_app,
         SAppDesc {
-            width: 800,
-            height: 600,
+            width: 400,
+            height: 300,
+            gl_force_gles2: true,
             window_title: title,
             ..Default::default()
         });

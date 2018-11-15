@@ -2,7 +2,22 @@
 
 Rust bindings to the [sokol](https://github.com/floooh/sokol) header-only cross-platform libraries.
 
-## status
+## How to build
+
+~~~
+> git clone --recursive https://github.com/code-disaster/sokol-rs
+> cargo build
+~~~
+
+The `sokol-samples` folder contains some examples directly ported from [sokol-samples/sapp](https://github.com/floooh/sokol-samples/tree/master/sapp).
+
+~~~
+> cargo run --bin clear-sapp 
+~~~
+
+## About the implementation
+
+### status
 
 C library | Rust module | status | notes
 :---: | :---: | :---: | ---
@@ -12,7 +27,7 @@ C library | Rust module | status | notes
 [sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_gfx.h) | `sokol::gfx` | mostly done | missing: separate resource management, render contexts, user-provided buffers
 [sokol_time.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | `sokol::time` | done |
 
-## remarks
+### remarks
 
 - I didn't bother separating the libraries as much as the C version does: the `gfx` (window/render context creation) and `audio` (stream callback) modules are hard-wired to the `app` module.
 - `gfx` is configured to use the "native" render API on each platform:
