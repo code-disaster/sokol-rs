@@ -301,7 +301,7 @@ impl SApp for MRT {
         let cube_shd = sg_make_shader(
             &SgShaderDesc {
                 vs: SgShaderStageDesc {
-                    source: cube_vs_src,
+                    source: Some(cube_vs_src),
                     uniform_blocks: vec!(
                         SgShaderUniformBlockDesc {
                             size: 64,
@@ -317,7 +317,7 @@ impl SApp for MRT {
                     ..Default::default()
                 },
                 fs: SgShaderStageDesc {
-                    source: cube_fs_src,
+                    source: Some(cube_fs_src),
                     ..Default::default()
                 },
             },
@@ -505,7 +505,7 @@ impl SApp for MRT {
         let fsq_shd = sg_make_shader(
             &SgShaderDesc {
                 vs: SgShaderStageDesc {
-                    source: fsq_vs_src,
+                    source: Some(fsq_vs_src),
                     uniform_blocks: vec!(
                         SgShaderUniformBlockDesc {
                             size: 8,
@@ -521,7 +521,7 @@ impl SApp for MRT {
                     ..Default::default()
                 },
                 fs: SgShaderStageDesc {
-                    source: fsq_fs_src,
+                    source: Some(fsq_fs_src),
                     images: vec![
                         SgShaderImageDesc {
                             name: "tex0",
@@ -652,11 +652,11 @@ impl SApp for MRT {
                 primitive_type: SgPrimitiveType::TriangleStrip,
                 shader: sg_make_shader(&SgShaderDesc {
                     vs: SgShaderStageDesc {
-                        source: dbg_vs_src,
+                        source: Some(dbg_vs_src),
                         ..Default::default()
                     },
                     fs: SgShaderStageDesc {
-                        source: dbg_fs_src,
+                        source: Some(dbg_fs_src),
                         images: vec![
                             SgShaderImageDesc {
                                 name: "tex",

@@ -354,35 +354,54 @@ mod ffi {
 
     impl SgShaderDesc {
         pub fn make(desc: &super::SgShaderDesc) -> SgShaderDesc {
-            let vs_code = CString::new(desc.vs.source).unwrap();
-            let fs_code = CString::new(desc.fs.source).unwrap();
+            let from_str = |s: Option<&str>| -> *const c_char {
+                if s.is_some() {
+                    let source = s.unwrap();
+                    CString::new(source).unwrap().into_raw()
+                } else {
+                    null()
+                }
+            };
+
+            let (vs_bytes, vs_size) = Self::collect_bytecode(desc.vs.byte_code);
+            let (fs_bytes, fs_size) = Self::collect_bytecode(desc.fs.byte_code);
 
             let mut shd = SgShaderDesc {
                 _start_canary: 0,
                 vs: SgShaderStageDesc {
-                    source: vs_code.into_raw(),
-                    byte_code: null(),
-                    byte_code_size: 0,
-                    entry: null(),
+                    source: from_str(desc.vs.source),
+                    byte_code: vs_bytes,
+                    byte_code_size: vs_size,
+                    entry: from_str(desc.vs.entry),
                     ..Default::default()
                 },
                 fs: SgShaderStageDesc {
-                    source: fs_code.into_raw(),
-                    byte_code: null(),
-                    byte_code_size: 0,
-                    entry: null(),
+                    source: from_str(desc.fs.source),
+                    byte_code: fs_bytes,
+                    byte_code_size: fs_size,
+                    entry: from_str(desc.fs.entry),
                     ..Default::default()
                 },
                 _end_canary: 0,
             };
 
-            SgShaderDesc::collect_uniform_blocks(&mut shd.vs, &desc.vs.uniform_blocks);
-            SgShaderDesc::collect_images(&mut shd.vs, &desc.vs.images);
+            Self::collect_uniform_blocks(&mut shd.vs, &desc.vs.uniform_blocks);
+            Self::collect_images(&mut shd.vs, &desc.vs.images);
 
-            SgShaderDesc::collect_uniform_blocks(&mut shd.fs, &desc.fs.uniform_blocks);
-            SgShaderDesc::collect_images(&mut shd.fs, &desc.fs.images);
+            Self::collect_uniform_blocks(&mut shd.fs, &desc.fs.uniform_blocks);
+            Self::collect_images(&mut shd.fs, &desc.fs.images);
 
             shd
+        }
+
+        fn collect_bytecode(b: Option<&[u8]>) -> (*const u8, c_int) {
+            if b.is_some() {
+                let bytes = b.unwrap();
+                let bytes_len = bytes.len() as i32;
+                (bytes.as_ptr(), bytes_len)
+            } else {
+                (null(), 0)
+            }
         }
 
         fn collect_uniforms(desc: &mut SgShaderUniformBlockDesc,
@@ -1161,7 +1180,9 @@ pub struct SgShaderImageDesc<'a> {
 
 #[derive(Default)]
 pub struct SgShaderStageDesc<'a> {
-    pub source: &'a str,
+    pub source: Option<&'a str>,
+    pub byte_code: Option<&'a [u8]>,
+    pub entry: Option<&'a str>,
     pub uniform_blocks: Vec<SgShaderUniformBlockDesc<'a>>,
     pub images: Vec<SgShaderImageDesc<'a>>,
 }

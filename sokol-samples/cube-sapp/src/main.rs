@@ -194,7 +194,7 @@ impl SApp for Cube {
         let shd = sg_make_shader(
             &SgShaderDesc {
                 vs: SgShaderStageDesc {
-                    source: vs_src,
+                    source: Some(vs_src),
                     uniform_blocks: vec!(
                         SgShaderUniformBlockDesc {
                             size: 64,
@@ -210,7 +210,7 @@ impl SApp for Cube {
                     ..Default::default()
                 },
                 fs: SgShaderStageDesc {
-                    source: fs_src,
+                    source: Some(fs_src),
                     ..Default::default()
                 },
             },
