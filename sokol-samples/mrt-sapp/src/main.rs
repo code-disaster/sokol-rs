@@ -1,5 +1,7 @@
 extern crate cgmath;
+extern crate imgui;
 extern crate sokol;
+extern crate sokol_imgui;
 
 use std::mem;
 
@@ -72,10 +74,16 @@ use sokol::gfx::SgUniformType;
 use sokol::gfx::SgVertexAttrDesc;
 use sokol::gfx::SgVertexFormat;
 use sokol::gfx::SgWrap;
+use sokol_imgui::imgui_create_context;
+use sokol_imgui::imgui_draw;
+use sokol_imgui::imgui_setup;
+use sokol_imgui::ImGuiRenderer;
+use sokol_imgui::imgui_new_frame;
 
 const MSAA_SAMPLES: i32 = 4;
 
 struct MRT {
+    imgui_renderer: Option<Box<ImGuiRenderer>>,
     offscreen_pass_desc: SgPassDesc,
     offscreen_pass: SgPass,
     offscreen_draw_state: SgDrawState,
@@ -152,6 +160,9 @@ impl SApp for MRT {
         sg_setup(&SgDesc {
             ..Default::default()
         });
+
+        imgui_create_context();
+        self.imgui_renderer = Some(imgui_setup());
 
         self.create_offscreen_pass(sapp_width(), sapp_height());
 
@@ -712,6 +723,9 @@ impl SApp for MRT {
         sg_apply_uniform_block(SgShaderStage::Vertex, 0, &offset, 8);
         sg_draw(0, 4, 1);
 
+        imgui_new_frame();
+        imgui_draw(&self.imgui_renderer);
+
         for i in 0..3 {
             sg_apply_viewport(i * 100, 0, 100, 100, false);
             self.dbg_draw_state.fs_images = vec![self.offscreen_pass_desc.color_attachments[i as usize].image];
@@ -724,6 +738,7 @@ impl SApp for MRT {
     }
 
     fn sapp_cleanup(&mut self) {
+        self.imgui_renderer = None; // ensure to drop renderer before sg_shutdown()
         sg_shutdown();
     }
 
@@ -736,6 +751,7 @@ impl SApp for MRT {
 
 fn main() {
     let mrt_app = MRT {
+        imgui_renderer: None,
         offscreen_pass_desc: Default::default(),
         offscreen_pass: Default::default(),
         offscreen_draw_state: Default::default(),

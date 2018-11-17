@@ -5,4 +5,6 @@ authors = ["Daniel Ludwig <codi@code-disaster.com>"]
 
 [dependencies]
 cgmath = "0.16.1"
+imgui = "0.0.21"
 sokol = { path = "../../sokol" }
+sokol-imgui = { path = "../../sokol-imgui" }

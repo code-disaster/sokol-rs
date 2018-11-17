@@ -446,6 +446,14 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Default)]
+    pub struct SgBufferLayoutDesc {
+        pub stride: c_int,
+        pub step_func: super::SgVertexStep,
+        pub step_rate: c_int,
+    }
+
+    #[repr(C)]
     pub struct SgVertexAttrDesc {
         name: *const c_char,
         sem_name: *const c_char,
@@ -471,7 +479,7 @@ mod ffi {
     #[repr(C)]
     #[derive(Default)]
     pub struct SgLayoutDesc {
-        buffers: [super::SgBufferLayoutDesc; SG_MAX_SHADERSTAGE_BUFFERS],
+        buffers: [SgBufferLayoutDesc; SG_MAX_SHADERSTAGE_BUFFERS],
         attrs: [SgVertexAttrDesc; SG_MAX_VERTEX_ATTRIBUTES],
     }
 
@@ -542,8 +550,8 @@ mod ffi {
         fn collect_layout_buffers(desc: &mut SgLayoutDesc,
                                   src: &Vec<super::SgBufferLayoutDesc>) {
             for (idx, buf) in src.iter().enumerate() {
-                desc.buffers[idx] = super::SgBufferLayoutDesc {
-                    stride: buf.stride,
+                desc.buffers[idx] = SgBufferLayoutDesc {
+                    stride: buf.stride as c_int,
                     step_func: buf.step_func,
                     step_rate: buf.step_rate,
                 };
@@ -1198,10 +1206,9 @@ pub struct SgShaderDesc<'a> {
     pub fs: SgShaderStageDesc<'a>,
 }
 
-#[repr(C)]
 #[derive(Default)]
 pub struct SgBufferLayoutDesc {
-    pub stride: i32,
+    pub stride: usize,
     pub step_func: SgVertexStep,
     pub step_rate: i32,
 }
