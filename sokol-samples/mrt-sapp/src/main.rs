@@ -1,7 +1,5 @@
 extern crate cgmath;
-extern crate imgui;
 extern crate sokol;
-extern crate sokol_imgui;
 
 use std::mem;
 
@@ -74,17 +72,10 @@ use sokol::gfx::SgUniformType;
 use sokol::gfx::SgVertexAttrDesc;
 use sokol::gfx::SgVertexFormat;
 use sokol::gfx::SgWrap;
-use sokol_imgui::imgui_consume_event;
-use sokol_imgui::imgui_create_context;
-use sokol_imgui::imgui_draw;
-use sokol_imgui::imgui_new_frame;
-use sokol_imgui::imgui_setup;
-use sokol_imgui::ImGuiRenderer;
 
 const MSAA_SAMPLES: i32 = 4;
 
 struct MRT {
-    imgui_renderer: Option<Box<ImGuiRenderer>>,
     offscreen_pass_desc: SgPassDesc,
     offscreen_pass: SgPass,
     offscreen_draw_state: SgDrawState,
@@ -160,9 +151,6 @@ impl SApp for MRT {
         sg_setup(&SgDesc {
             ..Default::default()
         });
-
-        imgui_create_context();
-        self.imgui_renderer = Some(imgui_setup());
 
         self.create_offscreen_pass(sapp_width(), sapp_height());
 
@@ -730,16 +718,11 @@ impl SApp for MRT {
             sg_draw(0, 4, 1);
         }
 
-        sg_apply_viewport(0, 0, sapp_width(), sapp_height(), false);
-        imgui_new_frame();
-        imgui_draw(&self.imgui_renderer);
-
         sg_end_pass();
         sg_commit();
     }
 
     fn sapp_cleanup(&mut self) {
-        self.imgui_renderer = None; // ensure to drop renderer before sg_shutdown()
         sg_shutdown();
     }
 
@@ -747,14 +730,11 @@ impl SApp for MRT {
         if event.event_type == SAppEventType::Resized {
             self.create_offscreen_pass(event.framebuffer_width, event.framebuffer_height);
         }
-
-        imgui_consume_event(&event);
     }
 }
 
 fn main() {
     let mrt_app = MRT {
-        imgui_renderer: None,
         offscreen_pass_desc: Default::default(),
         offscreen_pass: Default::default(),
         offscreen_draw_state: Default::default(),

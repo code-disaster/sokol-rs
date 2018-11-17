@@ -14,25 +14,14 @@ use sokol::gfx::*;
 const IMGUI_MAX_VERTICES: usize = 1 << 16;
 const IMGUI_MAX_INDICES: usize = IMGUI_MAX_VERTICES * 3;
 
+#[derive(Default)]
 pub struct ImGuiRenderer {
-    //vertices: Vec<ImDrawVert>,
-    //indices: Vec<u16>,
     vb: SgBuffer,
     ib: SgBuffer,
     font_image: SgImage,
     shader: SgShader,
     pipeline: SgPipeline,
     draw_state: SgDrawState,
-}
-
-impl Drop for ImGuiRenderer {
-    fn drop(&mut self) {
-        sg_destroy_buffer(self.vb);
-        sg_destroy_buffer(self.ib);
-        sg_destroy_image(self.font_image);
-        sg_destroy_shader(self.shader);
-        sg_destroy_pipeline(self.pipeline);
-    }
 }
 
 pub fn imgui_create_context() {
@@ -74,40 +63,40 @@ pub fn imgui_consume_event(event: &SAppEvent) {
             io.mouse_pos.x = event.mouse_x;
             io.mouse_pos.y = event.mouse_y;
             io.mouse_down[event.mouse_button as usize] = true;
-        },
+        }
         SAppEventType::MouseUp => {
             io.mouse_pos.x = event.mouse_x;
             io.mouse_pos.y = event.mouse_y;
             io.mouse_down[event.mouse_button as usize] = false;
-        },
+        }
         SAppEventType::MouseMove => {
             io.mouse_pos.x = event.mouse_x;
             io.mouse_pos.y = event.mouse_y;
-        },
+        }
         SAppEventType::MouseEnter | SAppEventType::MouseLeave => {
             for btn in 0..3 {
                 io.mouse_down[btn] = false;
             }
-        },
+        }
         SAppEventType::MouseScroll => {
             io.mouse_wheel = event.scroll_y;
-        },
+        }
         SAppEventType::KeyDown => {
             io.keys_down[event.key_code as usize] = true;
-        },
+        }
         SAppEventType::KeyUp => {
             io.keys_down[event.key_code as usize] = false;
-        },
+        }
         SAppEventType::Char => {
             unsafe {
                 ImGuiIO_AddInputCharacter(event.char_code as ImWchar);
             }
-        },
-        _ => {},
+        }
+        _ => {}
     }
 }
 
-pub fn imgui_setup() -> Box<ImGuiRenderer> {
+pub fn imgui_setup() -> ImGuiRenderer {
     //
     // vertex & index buffers
     //
@@ -268,14 +257,22 @@ pub fn imgui_setup() -> Box<ImGuiRenderer> {
         ..Default::default()
     };
 
-    Box::new(ImGuiRenderer {
+    ImGuiRenderer {
         vb,
         ib,
         font_image,
         shader,
         pipeline,
         draw_state,
-    })
+    }
+}
+
+pub fn imgui_shutdown(renderer: &ImGuiRenderer) {
+    sg_destroy_buffer(renderer.vb);
+    sg_destroy_buffer(renderer.ib);
+    sg_destroy_image(renderer.font_image);
+    sg_destroy_shader(renderer.shader);
+    sg_destroy_pipeline(renderer.pipeline);
 }
 
 pub fn imgui_new_frame() {
@@ -300,18 +297,13 @@ pub fn imgui_new_frame() {
     }
 }
 
-pub fn imgui_draw(renderer: &Option<Box<ImGuiRenderer>>) {
-    match renderer {
-        None => {}
-        Some(r) => {
-            let draw_data = unsafe {
-                igRender();
-                &*igGetDrawData()
-            };
-
-            imgui_render_draw_data(&r, &draw_data);
-        }
+pub fn imgui_draw(renderer: &ImGuiRenderer) {
+    let draw_data = unsafe {
+        igRender();
+        &*igGetDrawData()
     };
+
+    imgui_render_draw_data(renderer, &draw_data);
 }
 
 fn imgui_render_draw_data(renderer: &ImGuiRenderer, draw_data: &ImDrawData) {
