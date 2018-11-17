@@ -74,11 +74,12 @@ use sokol::gfx::SgUniformType;
 use sokol::gfx::SgVertexAttrDesc;
 use sokol::gfx::SgVertexFormat;
 use sokol::gfx::SgWrap;
+use sokol_imgui::imgui_consume_event;
 use sokol_imgui::imgui_create_context;
 use sokol_imgui::imgui_draw;
+use sokol_imgui::imgui_new_frame;
 use sokol_imgui::imgui_setup;
 use sokol_imgui::ImGuiRenderer;
-use sokol_imgui::imgui_new_frame;
 
 const MSAA_SAMPLES: i32 = 4;
 
@@ -109,8 +110,6 @@ impl MRT {
             1
         };
 
-        let empty: Vec<(u8, i32)> = vec![];
-
         let color_img_desc = SgImageDesc {
             render_target: true,
             width,
@@ -126,23 +125,24 @@ impl MRT {
             pixel_format: SgPixelFormat::Depth,
             ..color_img_desc
         };
+        let empty: Option<&Vec<(*const u8, i32)>> = None;
         self.offscreen_pass_desc = SgPassDesc {
             color_attachments: vec![
                 SgAttachmentDesc {
-                    image: sg_make_image(&empty, &color_img_desc),
+                    image: sg_make_image(empty, &color_img_desc),
                     ..Default::default()
                 },
                 SgAttachmentDesc {
-                    image: sg_make_image(&empty, &color_img_desc),
+                    image: sg_make_image(empty, &color_img_desc),
                     ..Default::default()
                 },
                 SgAttachmentDesc {
-                    image: sg_make_image(&empty, &color_img_desc),
+                    image: sg_make_image(empty, &color_img_desc),
                     ..Default::default()
                 },
             ],
             depth_stencil_attachment: SgAttachmentDesc {
-                image: sg_make_image(&empty, &depth_img_desc),
+                image: sg_make_image(empty, &depth_img_desc),
                 ..Default::default()
             },
         };
@@ -723,15 +723,16 @@ impl SApp for MRT {
         sg_apply_uniform_block(SgShaderStage::Vertex, 0, &offset, 8);
         sg_draw(0, 4, 1);
 
-        imgui_new_frame();
-        imgui_draw(&self.imgui_renderer);
-
         for i in 0..3 {
             sg_apply_viewport(i * 100, 0, 100, 100, false);
             self.dbg_draw_state.fs_images = vec![self.offscreen_pass_desc.color_attachments[i as usize].image];
             sg_apply_draw_state(&self.dbg_draw_state);
             sg_draw(0, 4, 1);
         }
+
+        sg_apply_viewport(0, 0, sapp_width(), sapp_height(), false);
+        imgui_new_frame();
+        imgui_draw(&self.imgui_renderer);
 
         sg_end_pass();
         sg_commit();
@@ -746,6 +747,8 @@ impl SApp for MRT {
         if event.event_type == SAppEventType::Resized {
             self.create_offscreen_pass(event.framebuffer_width, event.framebuffer_height);
         }
+
+        imgui_consume_event(&event);
     }
 }
 

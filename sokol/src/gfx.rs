@@ -207,19 +207,24 @@ mod ffi {
     }
 
     impl SgImageContent {
-        pub fn make<T>(content: &Vec<(T, i32)>) -> SgImageContent {
+        pub fn make<T>(content: Option<&Vec<(*const T, i32)>>) -> SgImageContent {
             let mut cnt = SgImageContent {
                 ..Default::default()
             };
 
-            for (idx, (data, size)) in content.iter().enumerate() {
-                let ptr = data as *const T;
+            match content {
+                None => {},
+                Some(content) => {
+                    for (idx, (data, size)) in content.iter().enumerate() {
+                        let ptr = *data as *const T;
 
-                cnt.subimage[idx] = SgSubImageContent {
-                    ptr: ptr as *const c_void,
-                    size: *size as i32,
-                };
-            }
+                        cnt.subimage[idx] = SgSubImageContent {
+                            ptr: ptr as *const c_void,
+                            size: *size as i32,
+                        };
+                    }
+                }
+            };
 
             cnt
         }
@@ -253,7 +258,7 @@ mod ffi {
     }
 
     impl SgImageDesc {
-        pub fn make<T>(content: &Vec<(T, i32)>, desc: &super::SgImageDesc) -> SgImageDesc {
+        pub fn make<T>(content: Option<&Vec<(*const T, i32)>>, desc: &super::SgImageDesc) -> SgImageDesc {
             SgImageDesc {
                 _start_canary: 0,
                 image_type: desc.image_type,
@@ -1375,7 +1380,7 @@ pub fn sg_make_buffer<T>(content: Option<&T>, desc: &SgBufferDesc) -> SgBuffer {
     }
 }
 
-pub fn sg_make_image<T>(content: &Vec<(T, i32)>, desc: &SgImageDesc) -> SgImage {
+pub fn sg_make_image<T>(content: Option<&Vec<(*const T, i32)>>, desc: &SgImageDesc) -> SgImage {
     unsafe {
         ffi::sg_make_image(&ffi::SgImageDesc::make(content, desc))
     }
@@ -1436,9 +1441,9 @@ pub fn sg_update_buffer<T>(buf: SgBuffer, content: &T, content_size: i32) {
     }
 }
 
-pub fn sg_update_image<T>(img: SgImage, content: &Vec<(T, i32)>) {
+pub fn sg_update_image<T>(img: SgImage, content: &Vec<(*const T, i32)>) {
     unsafe {
-        ffi::sg_update_image(img, &ffi::SgImageContent::make(content));
+        ffi::sg_update_image(img, &ffi::SgImageContent::make(Some(content)));
     }
 }
 

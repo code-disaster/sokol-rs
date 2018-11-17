@@ -10,7 +10,6 @@ use imgui_sys::*;
 
 use sokol::app::*;
 use sokol::gfx::*;
-use std::slice;
 
 const IMGUI_MAX_VERTICES: usize = 1 << 16;
 const IMGUI_MAX_INDICES: usize = IMGUI_MAX_VERTICES * 3;
@@ -67,6 +66,47 @@ pub fn imgui_create_context() {
     }
 }
 
+pub fn imgui_consume_event(event: &SAppEvent) {
+    let io = unsafe { &mut *igGetIO() };
+
+    match event.event_type {
+        SAppEventType::MouseDown => {
+            io.mouse_pos.x = event.mouse_x;
+            io.mouse_pos.y = event.mouse_y;
+            io.mouse_down[event.mouse_button as usize] = true;
+        },
+        SAppEventType::MouseUp => {
+            io.mouse_pos.x = event.mouse_x;
+            io.mouse_pos.y = event.mouse_y;
+            io.mouse_down[event.mouse_button as usize] = false;
+        },
+        SAppEventType::MouseMove => {
+            io.mouse_pos.x = event.mouse_x;
+            io.mouse_pos.y = event.mouse_y;
+        },
+        SAppEventType::MouseEnter | SAppEventType::MouseLeave => {
+            for btn in 0..3 {
+                io.mouse_down[btn] = false;
+            }
+        },
+        SAppEventType::MouseScroll => {
+            io.mouse_wheel = event.scroll_y;
+        },
+        SAppEventType::KeyDown => {
+            io.keys_down[event.key_code as usize] = true;
+        },
+        SAppEventType::KeyUp => {
+            io.keys_down[event.key_code as usize] = false;
+        },
+        SAppEventType::Char => {
+            unsafe {
+                ImGuiIO_AddInputCharacter(event.char_code as ImWchar);
+            }
+        },
+        _ => {},
+    }
+}
+
 pub fn imgui_setup() -> Box<ImGuiRenderer> {
     //
     // vertex & index buffers
@@ -105,24 +145,34 @@ pub fn imgui_setup() -> Box<ImGuiRenderer> {
 
     println!("font: {}x{}x{}", font_width, font_height, font_bytes_per_pixel);
     let font_image_size = font_width * font_height * font_bytes_per_pixel;
-    let font_image = unsafe { slice::from_raw_parts(font_pixels, font_image_size as usize) };
+    //let font_image_data = unsafe { slice::from_raw_parts(font_pixels, font_image_size as usize) };
+    let font_image_data = font_pixels;
 
-    let font_image = sg_make_image(&vec![(font_image, font_image_size)], &SgImageDesc {
-        image_type: SgImageType::Texture2D,
-        width: font_width,
-        height: font_height,
-        pixel_format: SgPixelFormat::RGBA8,
-        wrap_u: SgWrap::ClampToEdge,
-        wrap_v: SgWrap::ClampToEdge,
-        min_filter: SgFilter::Nearest,
-        mag_filter: SgFilter::Nearest,
-        ..Default::default()
-    });
+    let subimages = vec![(font_image_data as *const u8, font_image_size)];
+
+    let font_image = sg_make_image(
+        Some(&subimages),
+        &SgImageDesc {
+            image_type: SgImageType::Texture2D,
+            width: font_width,
+            height: font_height,
+            pixel_format: SgPixelFormat::RGBA8,
+            wrap_u: SgWrap::ClampToEdge,
+            wrap_v: SgWrap::ClampToEdge,
+            min_filter: SgFilter::Nearest,
+            mag_filter: SgFilter::Nearest,
+            ..Default::default()
+        },
+    );
 
     let shader = sg_make_shader(&SgShaderDesc {
         vs: SgShaderStageDesc {
             source: Some(
-                include_str!("shader/imgui.vert.hlsl")
+                match sg_api() {
+                    SgApi::Direct3D11 => include_str!("shader/imgui.vert.hlsl"),
+                    SgApi::OpenGL33 => include_str!("shader/imgui.vert.glsl"),
+                    _ => "",
+                }
             ),
             uniform_blocks: vec![
                 SgShaderUniformBlockDesc {
@@ -140,7 +190,11 @@ pub fn imgui_setup() -> Box<ImGuiRenderer> {
         },
         fs: SgShaderStageDesc {
             source: Some(
-                include_str!("shader/imgui.frag.hlsl")
+                match sg_api() {
+                    SgApi::Direct3D11 => include_str!("shader/imgui.frag.hlsl"),
+                    SgApi::OpenGL33 => include_str!("shader/imgui.frag.glsl"),
+                    _ => "",
+                }
             ),
             images: vec![
                 SgShaderImageDesc {
@@ -231,14 +285,14 @@ pub fn imgui_new_frame() {
         io.display_size.x = sapp_width() as f32;
         io.display_size.y = sapp_height() as f32;
 
-        io.delta_time = 1.0/60.0;
+        io.delta_time = 1.0 / 60.0;
 
         igNewFrame();
 
         igSetNextWindowPos(
             ImVec2 { x: 460.0, y: 20.0 },
             ImGuiCond::FirstUseEver,
-            ImVec2 { x: 0.0, y: 0.0 }
+            ImVec2 { x: 0.0, y: 0.0 },
         );
 
         let mut show = true;
@@ -306,7 +360,7 @@ fn imgui_render_draw_data(renderer: &ImGuiRenderer, draw_data: &ImDrawData) {
                 x: sapp_width() as f32,
                 y: sapp_height() as f32,
                 z: 0.0,
-                w: 0.0
+                w: 0.0,
             };
 
             sg_apply_uniform_block(SgShaderStage::Vertex, 0, &uniforms, 16);
