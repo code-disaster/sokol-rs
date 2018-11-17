@@ -76,16 +76,19 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
     //
     // shader
     //
+    let api = sg_api();
     let shader = sg_make_shader(&SgShaderDesc {
         vs: SgShaderStageDesc {
-            source: match sg_api() {
+            source: match api {
                 SgApi::OpenGL33 => Some(include_str!("shader/imgui.vert.glsl")),
                 _ => None,
             },
-            byte_code: match sg_api() {
+            byte_code: match api {
                 SgApi::Direct3D11 => Some(include_bytes!("shader/imgui.vert.fxc")),
+                SgApi::Metal => Some(include_bytes!("shader/imgui.vert.metallib")),
                 _ => None,
             },
+            entry: if api == SgApi::Metal { Some("main0") } else { None },
             uniform_blocks: vec![
                 SgShaderUniformBlockDesc {
                     size: 16,
@@ -101,14 +104,16 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
             ..Default::default()
         },
         fs: SgShaderStageDesc {
-            source: match sg_api() {
+            source: match api {
                 SgApi::OpenGL33 => Some(include_str!("shader/imgui.frag.glsl")),
                 _ => None,
             },
-            byte_code: match sg_api() {
+            byte_code: match api {
                 SgApi::Direct3D11 => Some(include_bytes!("shader/imgui.frag.fxc")),
+                SgApi::Metal => Some(include_bytes!("shader/imgui.frag.metallib")),
                 _ => None,
             },
+            entry: if api == SgApi::Metal { Some("main0") } else { None },
             images: vec![
                 SgShaderImageDesc {
                     name: "tex",

@@ -705,7 +705,7 @@ pub struct SgContext {
     enums
 */
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum SgApi {
     Direct3D11,
     Metal,
