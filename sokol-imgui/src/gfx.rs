@@ -1,3 +1,5 @@
+//! sokol_imgui::gfx - Dear ImGui renderer using the sokol::gfx API
+
 extern crate imgui_sys;
 extern crate sokol;
 

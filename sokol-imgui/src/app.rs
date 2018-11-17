@@ -1,3 +1,5 @@
+//! sokol_imgui::app - Dear ImGui update & input handler using the sokol::app API
+
 use std::ptr;
 
 use imgui_sys::*;
