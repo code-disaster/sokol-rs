@@ -8,12 +8,8 @@ use std::ptr;
 
 use imgui_sys::*;
 
-use sokol::app::sapp_height;
-use sokol::app::sapp_width;
+use sokol::app::*;
 use sokol::gfx::*;
-
-const IMGUI_MAX_VERTICES: usize = 1 << 16;
-const IMGUI_MAX_INDICES: usize = IMGUI_MAX_VERTICES * 3;
 
 #[derive(Default)]
 pub struct SgImGui {
@@ -25,18 +21,18 @@ pub struct SgImGui {
     draw_state: SgDrawState,
 }
 
-pub fn sg_imgui_setup() -> SgImGui {
+pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
     //
     // vertex & index buffers
     //
     let vb = sg_make_buffer(None::<&ImDrawVert>, &SgBufferDesc {
-        size: IMGUI_MAX_VERTICES * mem::size_of::<ImDrawVert>(),
+        size: max_vertices * mem::size_of::<ImDrawVert>(),
         buffer_type: SgBufferType::VertexBuffer,
         usage: SgUsage::Stream,
     });
 
     let ib = sg_make_buffer(None::<&i16>, &SgBufferDesc {
-        size: IMGUI_MAX_INDICES * mem::size_of::<i16>(),
+        size: max_vertices * 3 * mem::size_of::<i16>(),
         buffer_type: SgBufferType::IndexBuffer,
         usage: SgUsage::Stream,
     });
@@ -47,7 +43,6 @@ pub fn sg_imgui_setup() -> SgImGui {
     let mut font_width: c_int = 0;
     let mut font_height: c_int = 0;
     let mut font_pixels: *mut c_uchar = ptr::null_mut();
-    let mut font_bytes_per_pixel: c_int = 0;
 
     unsafe {
         let io = &*igGetIO();
@@ -55,15 +50,11 @@ pub fn sg_imgui_setup() -> SgImGui {
                                        &mut font_pixels,
                                        &mut font_width,
                                        &mut font_height,
-                                       &mut font_bytes_per_pixel);
+                                       ptr::null_mut());
     }
 
-    println!("font: {}x{}x{}", font_width, font_height, font_bytes_per_pixel);
-    let font_image_size = font_width * font_height * font_bytes_per_pixel;
-    //let font_image_data = unsafe { slice::from_raw_parts(font_pixels, font_image_size as usize) };
-    let font_image_data = font_pixels;
-
-    let subimages = vec![(font_image_data as *const u8, font_image_size)];
+    let font_image_size = font_width * font_height * 4;
+    let subimages = vec![(font_pixels as *const u8, font_image_size)];
 
     let font_image = sg_make_image(
         Some(&subimages),
@@ -80,15 +71,19 @@ pub fn sg_imgui_setup() -> SgImGui {
         },
     );
 
+    //
+    // shader
+    //
     let shader = sg_make_shader(&SgShaderDesc {
         vs: SgShaderStageDesc {
-            source: Some(
-                match sg_api() {
-                    SgApi::Direct3D11 => include_str!("shader/imgui.vert.hlsl"),
-                    SgApi::OpenGL33 => include_str!("shader/imgui.vert.glsl"),
-                    _ => "",
-                }
-            ),
+            source: match sg_api() {
+                SgApi::OpenGL33 => Some(include_str!("shader/imgui.vert.glsl")),
+                _ => None,
+            },
+            byte_code: match sg_api() {
+                SgApi::Direct3D11 => Some(include_bytes!("shader/imgui.vert.fxc")),
+                _ => None,
+            },
             uniform_blocks: vec![
                 SgShaderUniformBlockDesc {
                     size: 16,
@@ -104,13 +99,14 @@ pub fn sg_imgui_setup() -> SgImGui {
             ..Default::default()
         },
         fs: SgShaderStageDesc {
-            source: Some(
-                match sg_api() {
-                    SgApi::Direct3D11 => include_str!("shader/imgui.frag.hlsl"),
-                    SgApi::OpenGL33 => include_str!("shader/imgui.frag.glsl"),
-                    _ => "",
-                }
-            ),
+            source: match sg_api() {
+                SgApi::OpenGL33 => Some(include_str!("shader/imgui.frag.glsl")),
+                _ => None,
+            },
+            byte_code: match sg_api() {
+                SgApi::Direct3D11 => Some(include_bytes!("shader/imgui.frag.fxc")),
+                _ => None,
+            },
             images: vec![
                 SgShaderImageDesc {
                     name: "tex",
@@ -121,6 +117,9 @@ pub fn sg_imgui_setup() -> SgImGui {
         },
     });
 
+    //
+    // pipeline and draw state
+    //
     let pipeline = sg_make_pipeline(&SgPipelineDesc {
         shader,
         layout: SgLayoutDesc {
@@ -193,84 +192,59 @@ pub fn sg_imgui_setup() -> SgImGui {
     }
 }
 
-pub fn sg_imgui_shutdown(renderer: &SgImGui) {
-    sg_destroy_buffer(renderer.vb);
-    sg_destroy_buffer(renderer.ib);
-    sg_destroy_image(renderer.font_image);
-    sg_destroy_shader(renderer.shader);
-    sg_destroy_pipeline(renderer.pipeline);
+pub fn sg_imgui_shutdown(ui: &SgImGui) {
+    sg_destroy_buffer(ui.vb);
+    sg_destroy_buffer(ui.ib);
+    sg_destroy_image(ui.font_image);
+    sg_destroy_shader(ui.shader);
+    sg_destroy_pipeline(ui.pipeline);
 }
 
-pub fn sg_imgui_new_frame(dt: f32) {
-    unsafe {
-        let io = &mut *igGetIO();
-
-        io.display_size.x = sapp_width() as f32;
-        io.display_size.y = sapp_height() as f32;
-
-        io.delta_time = dt;
-
-        igNewFrame();
-    }
-}
-
-pub fn sg_imgui_draw(renderer: &SgImGui) {
+pub fn sg_imgui_draw(ui: &SgImGui) {
     let draw_data = unsafe {
         igRender();
         &*igGetDrawData()
     };
 
-    sg_imgui_render_draw_data(renderer, &draw_data);
-}
-
-fn sg_imgui_render_draw_data(renderer: &SgImGui, draw_data: &ImDrawData) {
     if draw_data.cmd_lists_count == 0 {
         return;
     }
 
-    let mut num_vertices = 0;
-    let mut num_indices = 0;
-    //let mut num_cmdlists = 0;
+    let uniforms = ImVec4 {
+        x: sapp_width() as f32,
+        y: sapp_height() as f32,
+        z: 0.0,
+        w: 0.0,
+    };
 
     unsafe {
         for cmd_list in draw_data.cmd_lists() {
             let cl = &**cmd_list;
 
-            if (num_vertices + cl.vtx_buffer.size) > IMGUI_MAX_VERTICES as i32
-                || (num_indices + cl.idx_buffer.size) > IMGUI_MAX_INDICES as i32 {
-                break;
-            }
-
-            let vb_offs = sg_append_buffer(renderer.vb,
+            let vb_offs = sg_append_buffer(ui.vb,
                                            &*cl.vtx_buffer.data,
                                            cl.vtx_buffer.size * 20);
 
-            num_vertices += cl.vtx_buffer.size;
-
-            let ib_offs = sg_append_buffer(renderer.ib,
+            let ib_offs = sg_append_buffer(ui.ib,
                                            &*cl.idx_buffer.data,
                                            cl.idx_buffer.size * 2);
 
-            num_indices += cl.idx_buffer.size;
+            if sg_query_buffer_overflow(ui.vb)
+                || sg_query_buffer_overflow(ui.ib) {
+                continue;
+            }
 
             let draw_state = SgDrawState {
-                pipeline: renderer.draw_state.pipeline,
-                vertex_buffers: vec![renderer.draw_state.vertex_buffers[0]],
+                pipeline: ui.draw_state.pipeline,
+                vertex_buffers: vec![ui.draw_state.vertex_buffers[0]],
                 vertex_buffer_offsets: vec![vb_offs],
-                index_buffer: renderer.draw_state.index_buffer,
+                index_buffer: ui.draw_state.index_buffer,
                 index_buffer_offset: ib_offs,
                 vs_images: vec![],
-                fs_images: vec![renderer.draw_state.fs_images[0]],
+                fs_images: vec![ui.draw_state.fs_images[0]],
             };
 
             sg_apply_draw_state(&draw_state);
-
-            let uniforms = ImVec4 {
-                x: sapp_width() as f32,
-                y: sapp_height() as f32,
-                z: 0.0,
-                w: 0.0,
-            };
 
             sg_apply_uniform_block(SgShaderStage::Vertex, 0, &uniforms, 16);
 
@@ -286,8 +260,6 @@ fn sg_imgui_render_draw_data(renderer: &SgImGui, draw_data: &ImDrawData) {
 
                 base_element += cmd.elem_count as i32;
             }
-
-            //num_cmdlists += 1;
         }
     }
 }

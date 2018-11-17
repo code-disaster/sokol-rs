@@ -9,26 +9,33 @@ use imgui_sys::ImVec2;
 
 use sokol::app::*;
 use sokol::gfx::*;
+use sokol::time::*;
 use sokol_imgui::app::*;
 use sokol_imgui::gfx::*;
 
 struct ImGuiDemo {
     pass_action: SgPassAction,
+    ui: SAppImGui,
     ui_renderer: SgImGui,
+    frame_time: u64,
 }
 
 impl SApp for ImGuiDemo {
     fn sapp_init(&mut self) {
+        stm_setup();
+
         sg_setup(&SgDesc {
             ..Default::default()
         });
 
-        sapp_imgui_setup();
-        self.ui_renderer = sg_imgui_setup();
+        self.ui = sapp_imgui_setup();
+        self.ui_renderer = sg_imgui_setup(1 << 16);
     }
 
     fn sapp_frame(&mut self) {
-        sg_imgui_new_frame(1.0 / 60.0);
+        let laptime = stm_laptime(&mut self.frame_time);
+
+        sapp_imgui_new_frame(&mut self.ui, stm_sec(laptime) as f32);
         self.show_demo_window();
 
         sg_begin_default_pass(&self.pass_action, sapp_width(), sapp_height());
@@ -43,7 +50,7 @@ impl SApp for ImGuiDemo {
     }
 
     fn sapp_event(&mut self, event: SAppEvent) {
-        sapp_imgui_event(&event);
+        sapp_imgui_event(&mut self.ui, &event);
     }
 }
 
@@ -73,7 +80,9 @@ fn main() {
             ),
             ..Default::default()
         },
+        ui: Default::default(),
         ui_renderer: Default::default(),
+        frame_time: 0,
     };
 
     let title = format!("imgui-sapp.rs ({:?})", sg_api());

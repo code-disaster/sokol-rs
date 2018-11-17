@@ -4,7 +4,13 @@ use imgui_sys::*;
 
 use sokol::app::*;
 
-pub fn sapp_imgui_setup() {
+#[derive(Default)]
+pub struct SAppImGui {
+    button_down: [bool; ffi::SAPP_MAX_MOUSEBUTTONS],
+    button_up: [bool; ffi::SAPP_MAX_MOUSEBUTTONS],
+}
+
+pub fn sapp_imgui_setup() -> SAppImGui {
     unsafe {
         igCreateContext(None, None);
 
@@ -35,21 +41,48 @@ pub fn sapp_imgui_setup() {
 
         io.ini_filename = ptr::null();
     }
+
+    SAppImGui {
+        ..Default::default()
+    }
 }
 
-pub fn sapp_imgui_event(event: &SAppEvent) {
+pub fn sapp_imgui_new_frame(ui: &mut SAppImGui, dt: f32) {
+    unsafe {
+        let io = &mut *igGetIO();
+
+        io.display_size.x = sapp_width() as f32;
+        io.display_size.y = sapp_height() as f32;
+
+        io.delta_time = dt;
+
+        for idx in 0..ffi::SAPP_MAX_MOUSEBUTTONS {
+            if ui.button_down[idx] {
+                ui.button_down[idx] = false;
+                io.mouse_down[idx] = true;
+            } else if ui.button_up[idx] {
+                ui.button_up[idx] = false;
+                io.mouse_down[idx] = false;
+            }
+        }
+
+        igNewFrame();
+    }
+}
+
+pub fn sapp_imgui_event(ui: &mut SAppImGui, event: &SAppEvent) {
     let io = unsafe { &mut *igGetIO() };
 
     match event.event_type {
         SAppEventType::MouseDown => {
             io.mouse_pos.x = event.mouse_x;
             io.mouse_pos.y = event.mouse_y;
-            io.mouse_down[event.mouse_button as usize] = true;
+            ui.button_down[event.mouse_button as usize] = true;
         }
         SAppEventType::MouseUp => {
             io.mouse_pos.x = event.mouse_x;
             io.mouse_pos.y = event.mouse_y;
-            io.mouse_down[event.mouse_button as usize] = false;
+            ui.button_up[event.mouse_button as usize] = true;
         }
         SAppEventType::MouseMove => {
             io.mouse_pos.x = event.mouse_x;
@@ -57,6 +90,8 @@ pub fn sapp_imgui_event(event: &SAppEvent) {
         }
         SAppEventType::MouseEnter | SAppEventType::MouseLeave => {
             for btn in 0..3 {
+                ui.button_down[btn] = false;
+                ui.button_up[btn] = false;
                 io.mouse_down[btn] = false;
             }
         }

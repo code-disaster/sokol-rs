@@ -18,7 +18,7 @@ pub mod ffi {
     use std::slice::from_raw_parts_mut;
 
     pub const SAPP_MAX_TOUCHPOINTS: usize = 8;
-    const _SAPP_MAX_MOUSEBUTTONS: usize = 3;
+    pub const SAPP_MAX_MOUSEBUTTONS: usize = 3;
     const _SAPP_MAX_KEYCODES: usize = 512;
 
     #[repr(C)]
