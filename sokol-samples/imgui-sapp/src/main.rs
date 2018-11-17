@@ -1,47 +1,69 @@
+extern crate imgui_sys;
 extern crate sokol;
 extern crate sokol_imgui;
 
+use imgui_sys::igSetNextWindowPos;
+use imgui_sys::igShowDemoWindow;
+use imgui_sys::ImGuiCond;
+use imgui_sys::ImVec2;
+
 use sokol::app::*;
 use sokol::gfx::*;
-use sokol_imgui::*;
+use sokol_imgui::app::*;
+use sokol_imgui::gfx::*;
 
-struct Clear {
+struct ImGuiDemo {
     pass_action: SgPassAction,
-    ui_renderer: ImGuiRenderer,
+    ui_renderer: SgImGui,
 }
 
-impl SApp for Clear {
+impl SApp for ImGuiDemo {
     fn sapp_init(&mut self) {
         sg_setup(&SgDesc {
             ..Default::default()
         });
 
-        imgui_create_context();
-        self.ui_renderer = imgui_setup();
+        sapp_imgui_setup();
+        self.ui_renderer = sg_imgui_setup();
     }
 
     fn sapp_frame(&mut self) {
+        sg_imgui_new_frame(1.0 / 60.0);
+        self.show_demo_window();
+
         sg_begin_default_pass(&self.pass_action, sapp_width(), sapp_height());
-
-        imgui_new_frame();
-        imgui_draw(&self.ui_renderer);
-
+        sg_imgui_draw(&self.ui_renderer);
         sg_end_pass();
         sg_commit();
     }
 
     fn sapp_cleanup(&mut self) {
-        imgui_shutdown(&self.ui_renderer);
+        sg_imgui_shutdown(&self.ui_renderer);
         sg_shutdown();
     }
 
     fn sapp_event(&mut self, event: SAppEvent) {
-        imgui_consume_event(&event);
+        sapp_imgui_event(&event);
+    }
+}
+
+impl ImGuiDemo {
+    fn show_demo_window(&mut self) {
+        unsafe {
+            igSetNextWindowPos(
+                ImVec2 { x: 60.0, y: 20.0 },
+                ImGuiCond::FirstUseEver,
+                ImVec2 { x: 0.0, y: 0.0 },
+            );
+
+            let mut show = true;
+            igShowDemoWindow(&mut show);
+        }
     }
 }
 
 fn main() {
-    let clear_app = Clear {
+    let app = ImGuiDemo {
         pass_action: SgPassAction {
             colors: vec!(
                 SgColorAttachmentAction {
@@ -54,13 +76,13 @@ fn main() {
         ui_renderer: Default::default(),
     };
 
-    let title = format!("clear-sapp.rs ({:?})", sg_api());
+    let title = format!("imgui-sapp.rs ({:?})", sg_api());
 
     let exit_code = sapp_main(
-        clear_app,
+        app,
         SAppDesc {
-            width: 800,
-            height: 600,
+            width: 1280,
+            height: 960,
             window_title: title,
             ..Default::default()
         });

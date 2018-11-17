@@ -6,3 +6,4 @@ authors = ["Daniel Ludwig <codi@code-disaster.com>"]
 [dependencies]
 sokol = { path = "../../sokol" }
 sokol-imgui = { path = "../../sokol-imgui" }
+imgui-sys = "0.0.21"
