@@ -97,9 +97,9 @@ impl SApp for Cube {
         ];
 
         let vbuf = sg_make_buffer(
-            &vertices,
+            Some(&vertices),
             &SgBufferDesc {
-                size: mem::size_of_val(&vertices) as i32,
+                size: mem::size_of_val(&vertices),
                 buffer_type: SgBufferType::VertexBuffer,
                 usage: SgUsage::Immutable,
             },
@@ -115,9 +115,9 @@ impl SApp for Cube {
         ];
 
         let ibuf = sg_make_buffer(
-            &indices,
+            Some(&indices),
             &SgBufferDesc {
-                size: mem::size_of_val(&indices) as i32,
+                size: mem::size_of_val(&indices),
                 buffer_type: SgBufferType::IndexBuffer,
                 ..Default::default()
             },

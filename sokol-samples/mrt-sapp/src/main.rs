@@ -183,9 +183,9 @@ impl SApp for MRT {
         ];
 
         let cube_vbuf = sg_make_buffer(
-            &cube_vertices,
+            Some(&cube_vertices),
             &SgBufferDesc {
-                size: mem::size_of_val(&cube_vertices) as i32,
+                size: mem::size_of_val(&cube_vertices),
                 ..Default::default()
             },
         );
@@ -200,9 +200,9 @@ impl SApp for MRT {
         ];
 
         let cube_ibuf = sg_make_buffer(
-            &cube_indices,
+            Some(&cube_indices),
             &SgBufferDesc {
-                size: mem::size_of_val(&cube_indices) as i32,
+                size: mem::size_of_val(&cube_indices),
                 buffer_type: SgBufferType::IndexBuffer,
                 ..Default::default()
             },
@@ -383,9 +383,9 @@ impl SApp for MRT {
         ];
 
         let quad_vbuf = sg_make_buffer(
-            &quad_vertices,
+            Some(&quad_vertices),
             &SgBufferDesc {
-                size: mem::size_of_val(&quad_vertices) as i32,
+                size: mem::size_of_val(&quad_vertices),
                 ..Default::default()
             },
         );

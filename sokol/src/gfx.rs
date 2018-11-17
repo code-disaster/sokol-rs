@@ -141,7 +141,9 @@ mod ffi {
     #[repr(C)]
     pub struct SgBufferDesc {
         _start_canary: u32,
-        desc: super::SgBufferDesc,
+        size: c_int,
+        buffer_type: super::SgBufferType,
+        usage: super::SgUsage,
         content: *const c_void,
         gl_buffers: [u32; SG_NUM_INFLIGHT_FRAMES],
         mtl_buffers: [*const c_void; SG_NUM_INFLIGHT_FRAMES],
@@ -150,12 +152,18 @@ mod ffi {
     }
 
     impl SgBufferDesc {
-        pub fn make<T>(content: &T, desc: &super::SgBufferDesc) -> SgBufferDesc {
-            let ptr = content as *const T;
+        pub fn make<T>(content: Option<&T>, desc: &super::SgBufferDesc) -> SgBufferDesc {
+            let ptr = if content.is_some() {
+                content.unwrap() as *const T
+            } else {
+                null()
+            };
 
             SgBufferDesc {
                 _start_canary: 0,
-                desc: *desc,
+                size: desc.size as c_int,
+                buffer_type: desc.buffer_type,
+                usage: desc.usage,
                 content: ptr as *const c_void,
                 gl_buffers: [0, 0],
                 mtl_buffers: [null(), null()],
@@ -1129,10 +1137,9 @@ pub struct SgDesc {
     pub gl_force_gles2: bool,
 }
 
-#[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Default)]
 pub struct SgBufferDesc {
-    pub size: i32,
+    pub size: usize,
     pub buffer_type: SgBufferType,
     pub usage: SgUsage,
 }
@@ -1355,7 +1362,7 @@ pub fn sg_reset_state_cache() {
     }
 }
 
-pub fn sg_make_buffer<T>(content: &T, desc: &SgBufferDesc) -> SgBuffer {
+pub fn sg_make_buffer<T>(content: Option<&T>, desc: &SgBufferDesc) -> SgBuffer {
     unsafe {
         ffi::sg_make_buffer(&ffi::SgBufferDesc::make(content, desc))
     }
