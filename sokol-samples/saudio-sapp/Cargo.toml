@@ -5,3 +5,4 @@ authors = ["Daniel Ludwig <codi@code-disaster.com>"]
 
 [dependencies]
 sokol = { path = "../../sokol" }
+sokol-stb = { path = "../../sokol-stb" }
