@@ -7,6 +7,7 @@ use sokol::app::sapp_main;
 use sokol::app::sapp_width;
 use sokol::app::SAppDesc;
 use sokol::app::SAppEvent;
+use sokol::app::SAppEventType;
 use sokol::audio::saudio_channels;
 use sokol::audio::saudio_expect;
 use sokol::audio::saudio_push;
@@ -26,13 +27,12 @@ use sokol::gfx::SgPassAction;
 use sokol_stb::vorbis::saudio_vorbis_close;
 use sokol_stb::vorbis::saudio_vorbis_decode;
 use sokol_stb::vorbis::saudio_vorbis_open;
+use sokol_stb::vorbis::saudio_vorbis_rewind;
 use sokol_stb::vorbis::SAudioVorbis;
 
-const NUM_SAMPLES: usize = 4096;
+const NUM_SAMPLES: usize = 44800 * 2;
 
 struct SAudio {
-    even_odd: u32,
-    sample_pos: i32,
     samples: Box<[f32; NUM_SAMPLES]>,
     audio_stream: Option<SAudioVorbis>,
 }
@@ -79,34 +79,17 @@ impl SApp for SAudio {
                 let num_channels = saudio_channels();
                 let buffer = &mut self.samples.as_mut();
 
-                let mut frames_pushed = 0;
-                while frames_pushed < num_frames {
-                    let frames_decoded = saudio_vorbis_decode(stream, *buffer, num_channels);
-                    if frames_decoded == 0 {
-                        break;
+                let buffer_size_requested = ((num_frames * num_channels) as usize).min(NUM_SAMPLES);
+                let buffer_requested = &mut (*buffer)[..buffer_size_requested];
+
+                if num_frames > 0 {
+                    let frames_decoded = saudio_vorbis_decode(stream, buffer_requested, num_channels);
+                    if frames_decoded != 0 {
+                        saudio_push(buffer_requested, frames_decoded);
                     }
-                    saudio_push(*buffer, frames_decoded);
-                    frames_pushed += frames_decoded;
                 }
             }
         };
-
-        /*let num_frames = saudio_expect();
-        let mut s: f32;
-        for _i in 0..num_frames {
-            if (self.even_odd & (1 << 5)) != 0 {
-                s = 0.05;
-            } else {
-                s = -0.05;
-            }
-            self.even_odd += 1;
-            self.samples[self.sample_pos as usize] = s;
-            self.sample_pos += 1;
-            if self.sample_pos == NUM_SAMPLES as i32 {
-                self.sample_pos = 0;
-                saudio_push(&self.samples, NUM_SAMPLES as i32);
-            }
-        }*/
 
         sg_end_pass();
         sg_commit();
@@ -121,7 +104,16 @@ impl SApp for SAudio {
         sg_shutdown();
     }
 
-    fn sapp_event(&mut self, _event: SAppEvent) {}
+    fn sapp_event(&mut self, event: SAppEvent) {
+        if event.event_type == SAppEventType::Char {
+            if event.char_code == 'r' as u32 {
+                match &mut self.audio_stream {
+                    None => {}
+                    Some(stream) => saudio_vorbis_rewind(stream)
+                }
+            }
+        }
+    }
 
     fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, _num_channels: i32) {
         //
@@ -145,8 +137,6 @@ impl SApp for SAudio {
 
 fn main() {
     let saudio_app = SAudio {
-        even_odd: 0,
-        sample_pos: 0,
         samples: Box::new([0.0; NUM_SAMPLES]),
         audio_stream: None,
     };

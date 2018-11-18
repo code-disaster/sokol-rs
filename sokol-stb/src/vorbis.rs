@@ -60,6 +60,9 @@ pub struct SAudioVorbis {
     mmap: Mmap,
     f: *mut ffi::StbVorbis,
     read_pos: usize,
+    last_frame_decoded: *mut *mut f32,
+    last_frame_samples: i32,
+    last_frame_channels: i32,
     pub info: SAudioVorbisInfo,
 }
 
@@ -108,6 +111,9 @@ pub fn saudio_vorbis_open(path: &str) -> Result<SAudioVorbis, io::Error> {
         mmap,
         f,
         read_pos: consumed as usize,
+        last_frame_decoded: ptr::null_mut(),
+        last_frame_samples: 0,
+        last_frame_channels: 0,
         info: SAudioVorbisInfo {
             sample_rate: info.sample_rate,
             channels: info.channels,
@@ -122,12 +128,39 @@ pub fn saudio_vorbis_close(stream: &SAudioVorbis) {
     }
 }
 
+pub fn saudio_vorbis_rewind(stream: &mut SAudioVorbis) {
+    stream.read_pos = 0;
+    stream.last_frame_samples = 0;
+    unsafe {
+        ffi::stb_vorbis_flush_pushdata(stream.f);
+    }
+}
+
 pub fn saudio_vorbis_decode(stream: &mut SAudioVorbis,
                             output_buffer: &mut [f32],
                             output_channels: i32) -> i32 {
     let mut samples_read = 0;
     let mut output_written = 0;
     let mut need_more_data = true;
+
+    if stream.last_frame_samples > 0 {
+        // left-over decoded data from last pass
+        let decoded = unsafe {
+            from_raw_parts(stream.last_frame_decoded, stream.last_frame_channels as usize)
+        };
+        let (more_data, written) = saudio_vorbis_mix(
+            decoded,
+            stream.last_frame_samples,
+            stream.last_frame_channels,
+            output_buffer,
+            output_written,
+            output_channels,
+        );
+        output_written += written;
+        if !more_data || written == 0 {
+            return 0;
+        }
+    }
 
     let mmap: &Mmap = &stream.mmap;
     let mut end_of_stream = mmap.len() == stream.read_pos;
@@ -155,12 +188,16 @@ pub fn saudio_vorbis_decode(stream: &mut SAudioVorbis,
                 &[]
             };
 
+            stream.last_frame_decoded = output_ptr;
+            stream.last_frame_samples = samples_read;
+            stream.last_frame_channels = channels;
+
             (consumed, decoded)
         };
 
         if consumed == 0 && samples_read == 0 {
             // need more data
-            // TODO shouldn't happen since we map the whole file
+            // TODO shouldn't happen since we mmap the whole file
         } else if consumed > 0 && samples_read == 0 {
             // re-sync
             stream.read_pos += consumed as usize;
@@ -216,7 +253,7 @@ fn saudio_vorbis_mix(decoded: &[*mut f32],
         let mut dst_idx = dst_offset + chan;
         for src_idx in 0..src_frames {
             let amp = src_chan[src_idx];
-            output_buffer[dst_idx] = amp.max(-0.8).min(0.8);
+            output_buffer[dst_idx] = amp;
             dst_idx += dst_channels;
         }
     }
