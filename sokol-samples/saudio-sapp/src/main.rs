@@ -1,6 +1,8 @@
 extern crate sokol;
 extern crate sokol_stb;
 
+use std::env;
+
 use sokol::app::SApp;
 use sokol::app::sapp_height;
 use sokol::app::sapp_main;
@@ -44,15 +46,18 @@ impl SApp for SAudio {
             ..Default::default()
         });
 
-        self.audio_stream = match saudio_vorbis_open("test.ogg") {
-            Err(_) => None,
-            Ok(s) => Some(s)
-        };
+        let path = env::args().nth(1);
+        if path.is_some() {
+            self.audio_stream = match saudio_vorbis_open(&path.unwrap()) {
+                Err(_) => None,
+                Ok(s) => Some(s)
+            };
+        }
 
         saudio_setup(&SAudioDesc {
             sample_rate: 44800,
             num_channels: 2,
-            use_stream_cb: false,
+            use_stream_cb: !self.audio_stream.is_some(),
             ..Default::default()
         });
     }
