@@ -50,7 +50,9 @@ impl SApp for ImGuiDemo {
     }
 
     fn sapp_event(&mut self, event: SAppEvent) {
-        sapp_imgui_event(&mut self.ui, &event);
+        let (_processed_mouse, _processed_keyboard) = sapp_imgui_event(&mut self.ui, &event);
+        // here, application would use returned tuple to figure out
+        // which events to continue processing
     }
 }
 

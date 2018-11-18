@@ -12,6 +12,9 @@ pub struct SAppImGui {
     button_up: [bool; ffi::SAPP_MAX_MOUSEBUTTONS],
 }
 
+/// Creates a default ImGui context and configures sokol::app key mappings.
+///
+/// This should be called from SApp::sapp_init().
 pub fn sapp_imgui_setup() -> SAppImGui {
     unsafe {
         igCreateContext(None, None);
@@ -49,6 +52,7 @@ pub fn sapp_imgui_setup() -> SAppImGui {
     }
 }
 
+/// Starts a new ImGui frame.
 pub fn sapp_imgui_new_frame(ui: &mut SAppImGui, dt: f32) {
     unsafe {
         let io = &mut *igGetIO();
@@ -72,7 +76,13 @@ pub fn sapp_imgui_new_frame(ui: &mut SAppImGui, dt: f32) {
     }
 }
 
-pub fn sapp_imgui_event(ui: &mut SAppImGui, event: &SAppEvent) {
+/// Event handler which maps SApp events to ImGui state.
+///
+/// Returns a tuple (bool, bool) stating if (mouse, keyboard) events are
+/// consumed by ImGui and shouldn't be processed by the application.
+///
+/// This should be called from SApp::sapp_event().
+pub fn sapp_imgui_event(ui: &mut SAppImGui, event: &SAppEvent) -> (bool, bool) {
     let io = unsafe { &mut *igGetIO() };
 
     match event.event_type {
@@ -112,5 +122,7 @@ pub fn sapp_imgui_event(ui: &mut SAppImGui, event: &SAppEvent) {
             }
         }
         _ => {}
-    }
+    };
+
+    (io.want_capture_mouse, io.want_capture_keyboard)
 }

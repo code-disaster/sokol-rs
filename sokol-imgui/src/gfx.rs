@@ -23,6 +23,9 @@ pub struct SgImGui {
     draw_state: SgDrawState,
 }
 
+/// Creates resources and states to render ImGui content.
+///
+/// This function must be called __after__ gfx::sg_setup().
 pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
     //
     // vertex & index buffers
@@ -199,6 +202,10 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
     }
 }
 
+/// Releases resources used by the ImGui renderer.
+///
+/// This function must be called __before__ gfx::shutdown(). The call isn't
+/// mandatory, since sokol does its own cleanup on gfx::shutdown().
 pub fn sg_imgui_shutdown(ui: &SgImGui) {
     sg_destroy_buffer(ui.vb);
     sg_destroy_buffer(ui.ib);
@@ -207,6 +214,9 @@ pub fn sg_imgui_shutdown(ui: &SgImGui) {
     sg_destroy_pipeline(ui.pipeline);
 }
 
+/// Renders the ImGui content.
+///
+/// Usually called between gfx::sg_begin_default_pass() and gfx::sg_end_pass().
 pub fn sg_imgui_draw(ui: &SgImGui) {
     let draw_data = unsafe {
         igRender();
