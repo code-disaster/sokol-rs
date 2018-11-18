@@ -128,6 +128,11 @@ pub fn saudio_vorbis_close(stream: &SAudioVorbis) {
     }
 }
 
+pub fn saudio_vorbis_end_of_stream(stream: &SAudioVorbis) -> bool {
+    let mmap: &Mmap = &stream.mmap;
+    mmap.len() == stream.read_pos
+}
+
 pub fn saudio_vorbis_rewind(stream: &mut SAudioVorbis) {
     stream.read_pos = 0;
     stream.last_frame_samples = 0;

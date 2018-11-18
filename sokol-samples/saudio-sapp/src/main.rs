@@ -26,6 +26,7 @@ use sokol::gfx::SgDesc;
 use sokol::gfx::SgPassAction;
 use sokol_stb::vorbis::saudio_vorbis_close;
 use sokol_stb::vorbis::saudio_vorbis_decode;
+use sokol_stb::vorbis::saudio_vorbis_end_of_stream;
 use sokol_stb::vorbis::saudio_vorbis_open;
 use sokol_stb::vorbis::saudio_vorbis_rewind;
 use sokol_stb::vorbis::SAudioVorbis;
@@ -87,6 +88,10 @@ impl SApp for SAudio {
                     if frames_decoded != 0 {
                         saudio_push(buffer_requested, frames_decoded);
                     }
+                }
+
+                if saudio_vorbis_end_of_stream(stream) {
+                    saudio_vorbis_rewind(stream);
                 }
             }
         };
