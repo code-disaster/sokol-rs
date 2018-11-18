@@ -72,6 +72,7 @@ use sokol::gfx::SgUniformType;
 use sokol::gfx::SgVertexAttrDesc;
 use sokol::gfx::SgVertexFormat;
 use sokol::gfx::SgWrap;
+use sokol::gfx::SG_IMAGE_CONTENT_NONE;
 
 const MSAA_SAMPLES: i32 = 4;
 
@@ -116,24 +117,23 @@ impl MRT {
             pixel_format: SgPixelFormat::Depth,
             ..color_img_desc
         };
-        let empty: Option<&Vec<(*const u8, i32)>> = None;
         self.offscreen_pass_desc = SgPassDesc {
             color_attachments: vec![
                 SgAttachmentDesc {
-                    image: sg_make_image(empty, &color_img_desc),
+                    image: sg_make_image(SG_IMAGE_CONTENT_NONE, &color_img_desc),
                     ..Default::default()
                 },
                 SgAttachmentDesc {
-                    image: sg_make_image(empty, &color_img_desc),
+                    image: sg_make_image(SG_IMAGE_CONTENT_NONE, &color_img_desc),
                     ..Default::default()
                 },
                 SgAttachmentDesc {
-                    image: sg_make_image(empty, &color_img_desc),
+                    image: sg_make_image(SG_IMAGE_CONTENT_NONE, &color_img_desc),
                     ..Default::default()
                 },
             ],
             depth_stencil_attachment: SgAttachmentDesc {
-                image: sg_make_image(empty, &depth_img_desc),
+                image: sg_make_image(SG_IMAGE_CONTENT_NONE, &depth_img_desc),
                 ..Default::default()
             },
         };

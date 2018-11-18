@@ -27,13 +27,13 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
     //
     // vertex & index buffers
     //
-    let vb = sg_make_buffer(None::<&ImDrawVert>, &SgBufferDesc {
+    let vb = sg_make_buffer(SG_BUFFER_CONTENT_NONE, &SgBufferDesc {
         size: max_vertices * mem::size_of::<ImDrawVert>(),
         buffer_type: SgBufferType::VertexBuffer,
         usage: SgUsage::Stream,
     });
 
-    let ib = sg_make_buffer(None::<&i16>, &SgBufferDesc {
+    let ib = sg_make_buffer(SG_BUFFER_CONTENT_NONE, &SgBufferDesc {
         size: max_vertices * 3 * mem::size_of::<i16>(),
         buffer_type: SgBufferType::IndexBuffer,
         usage: SgUsage::Stream,

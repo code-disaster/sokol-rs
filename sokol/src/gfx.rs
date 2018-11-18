@@ -1157,6 +1157,8 @@ pub struct SgBufferDesc {
     pub usage: SgUsage,
 }
 
+pub const SG_BUFFER_CONTENT_NONE: Option<&u8> = None;
+
 #[derive(Default)]
 pub struct SgImageDesc {
     pub image_type: SgImageType,
@@ -1177,6 +1179,8 @@ pub struct SgImageDesc {
     pub min_lod: f32,
     pub max_lod: f32,
 }
+
+pub const SG_IMAGE_CONTENT_NONE: Option<&Vec<(*const u8, i32)>> = None;
 
 #[derive(Default)]
 pub struct SgShaderUniformDesc<'a> {
