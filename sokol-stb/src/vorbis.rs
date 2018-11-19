@@ -75,6 +75,7 @@ pub struct SAudioVorbisInfo {
 const VORBIS_NO_ERROR: i32 = 0;
 const VORBIS_NEED_MORE_DATA: i32 = 1;
 
+/// Memory-maps a Vorbis .ogg file and prepares for streaming its audio data.
 pub fn saudio_vorbis_open(path: &str) -> Result<SAudioVorbis, io::Error> {
     let file = File::open(path)?;
 
@@ -122,17 +123,22 @@ pub fn saudio_vorbis_open(path: &str) -> Result<SAudioVorbis, io::Error> {
     })
 }
 
+/// Closes the audio stream.
 pub fn saudio_vorbis_close(stream: &SAudioVorbis) {
     unsafe {
         ffi::stb_vorbis_close(stream.f);
     }
 }
 
+/// Returns true if end of stream is reached.
+///
+/// You can use `saudio_vorbis_rewind()` to restart the stream.
 pub fn saudio_vorbis_end_of_stream(stream: &SAudioVorbis) -> bool {
     let mmap: &Mmap = &stream.mmap;
     mmap.len() == stream.read_pos
 }
 
+/// Restarts the audio stream.
 pub fn saudio_vorbis_rewind(stream: &mut SAudioVorbis) {
     stream.read_pos = 0;
     stream.last_frame_samples = 0;
@@ -141,6 +147,13 @@ pub fn saudio_vorbis_rewind(stream: &mut SAudioVorbis) {
     }
 }
 
+/// Decodes audio data.
+///
+/// This function decodes as many Vorbis frames as the provided output buffer
+/// can hold, or the end of stream is reached.
+///
+/// The number of _samples per channel_ written to the output buffer is
+/// returned, which equals `<return value> * output_channels` float values.
 pub fn saudio_vorbis_decode(stream: &mut SAudioVorbis,
                             output_buffer: &mut [f32],
                             output_channels: i32) -> i32 {
