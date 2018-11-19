@@ -8,5 +8,5 @@ readme = "README.md"
 license = "Zlib"
 
 [dependencies]
-imgui-sys = "0.0.21"
 sokol = { path = "../sokol" }
+imgui-sys = { git = "https://github.com/code-disaster/imgui-rs", branch = "patch.x86_64-pc-windows-gnu" }
