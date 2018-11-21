@@ -67,6 +67,10 @@ pub mod ffi {
     }
 
     extern {
+        /// Native `main()` function redefined to `main_c()` to avoid
+        /// naming conflicts when linking with Rust's `fn main()`.
+        ///
+        /// This function is called by `sapp_main()`.
         pub fn main_c(argc: c_int, argv: *const *const c_char) -> c_int;
 
         pub fn sapp_isvalid() -> bool;
@@ -91,7 +95,12 @@ pub mod ffi {
         pub fn sapp_d3d11_get_depth_stencil_view() -> *const c_void;
         pub fn sapp_win32_get_hwnd() -> *const c_void;
 
+        /// Helper function to store a "user pointer", which is a
+        /// pointer to our `SAppImpl` instance.
         pub fn sapp_set_user_ptr(ptr: *mut c_void);
+
+        /// Helper function to retrieve the "user pointer", which is a
+        /// pointer to our `SAppImpl` instance.
         pub fn sapp_get_user_ptr() -> *mut c_void;
     }
 
@@ -405,16 +414,35 @@ pub struct SAppDesc {
 }
 
 pub trait SApp {
+    /// Init callback function.
     fn sapp_init(&mut self);
+
+    /// Frame callback function.
     fn sapp_frame(&mut self);
+
+    /// Cleanup callback function.
     fn sapp_cleanup(&mut self);
+
+    /// Event callback function.
     fn sapp_event(&mut self, event: SAppEvent);
 
+    /// Optional `sokol_app` error reporting callback function.
     fn sapp_fail(&mut self, msg: &str) {
         print!("{}", msg);
     }
 
-    fn saudio_stream(&mut self, _buffer: &mut [f32], _num_frames: i32, _num_channels: i32) {}
+    /// Function called by `sokol_audio` in callback mode.
+    ///
+    /// The default implementation clears the buffer to zero. Applications
+    /// using this mode are expected to mix audio data into the buffer.
+    ///
+    /// This is called from a separate thread on all desktop platforms.
+    fn saudio_stream(&mut self, buffer: &mut [f32], num_frames: i32, num_channels: i32) {
+        let len = (num_frames * num_channels) as usize;
+        for i in 0..len {
+            buffer[i] = 0.0;
+        }
+    }
 }
 
 struct SAppImpl {

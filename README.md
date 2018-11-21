@@ -1,27 +1,25 @@
 # sokol-rs
 
-[![Crates.io][ci]][cl] [![Docs.rs][di]][dl] ![zlib][li]
+This repository contains source code of the following Rust crates and libraries:
 
-[ci]: https://img.shields.io/crates/v/sokol.svg
-[cl]: https://crates.io/crates/sokol/
+- sokol ([README](sokol/)) - Rust bindings to the [sokol][sokol] header-only, cross-platform libraries.
+- sokol-imgui - a [Dear ImGui][imgui] backend powered by sokol and imgui-sys.
+- sokol-stb - a library for easy access to a _subset_ of the [stb][stb] libraries.
 
-[li]: https://img.shields.io/crates/l/sokol.svg?maxAge=2592000
-
-[di]: https://docs.rs/sokol/badge.svg
-[dl]: https://docs.rs/sokol/
-
-Rust bindings to the [sokol](https://github.com/floooh/sokol) header-only, cross-platform libraries.
-
-This crate provides access to `sokol_gfx` (3D-API wrapper), `sokol_app` (application framework wrapper), `sokol_time` (time measurement) and `sokol_audio` (buffer-streaming audio playback). It can serve as an easy-to-use, lean, _almost_ dependency-free entry point to create a graphics or game application.
+[imgui]: https://github.com/ocornut/imgui
+[sokol]: https://github.com/floooh/sokol
+[stb]: https://github.com/nothings/stb
 
 ## How to build
+
+The current version compiles (and has been tested) with stable Rust (v1.30) on Windows (both MSVC and GNU toolchains), MacOS and Linux.
 
 ~~~
 > git clone --recursive https://github.com/code-disaster/sokol-rs
 > cargo build
 ~~~
 
-The `sokol-samples` folder contains some examples directly ported from [sokol-samples/sapp](https://github.com/floooh/sokol-samples/tree/master/sapp).
+The `sokol-samples` folder contains some examples ported from [sokol-samples/sapp](https://github.com/floooh/sokol-samples/tree/master/sapp).
 
 ~~~
 > cargo run --bin clear-sapp 
