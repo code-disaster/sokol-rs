@@ -10,7 +10,7 @@ license = "Zlib"
 build = "build.rs"
 
 [dependencies]
-bitflags = "1.0.4"
+bitflags = "1.0"
 
 [build-dependencies]
-cc = "1.0.25"
+cc = "1.0"
