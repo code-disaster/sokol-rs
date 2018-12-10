@@ -1,58 +1,11 @@
-extern crate cgmath;
+extern crate nalgebra_glm as glm;
 extern crate sokol;
 
+use std::f32::consts::PI;
 use std::mem;
 
-use cgmath::conv::array4x4;
-use cgmath::Deg;
-use cgmath::Matrix4;
-use cgmath::perspective;
-use cgmath::Point3;
-use cgmath::Vector3;
-
-use sokol::app::SApp;
-use sokol::app::sapp_height;
-use sokol::app::sapp_main;
-use sokol::app::sapp_width;
-use sokol::app::SAppDesc;
-use sokol::app::SAppEvent;
-use sokol::gfx::sg_api;
-use sokol::gfx::sg_apply_draw_state;
-use sokol::gfx::sg_apply_uniform_block;
-use sokol::gfx::sg_begin_default_pass;
-use sokol::gfx::sg_commit;
-use sokol::gfx::sg_draw;
-use sokol::gfx::sg_end_pass;
-use sokol::gfx::sg_make_buffer;
-use sokol::gfx::sg_make_pipeline;
-use sokol::gfx::sg_make_shader;
-use sokol::gfx::sg_setup;
-use sokol::gfx::sg_shutdown;
-use sokol::gfx::SgAction;
-use sokol::gfx::SgApi;
-use sokol::gfx::SgBufferDesc;
-use sokol::gfx::SgBufferLayoutDesc;
-use sokol::gfx::SgBufferType;
-use sokol::gfx::SgColorAttachmentAction;
-use sokol::gfx::SgCompareFunc;
-use sokol::gfx::SgCullMode;
-use sokol::gfx::SgDepthStencilState;
-use sokol::gfx::SgDesc;
-use sokol::gfx::SgDrawState;
-use sokol::gfx::SgIndexType;
-use sokol::gfx::SgLayoutDesc;
-use sokol::gfx::SgPassAction;
-use sokol::gfx::SgPipelineDesc;
-use sokol::gfx::SgRasterizerState;
-use sokol::gfx::SgShaderDesc;
-use sokol::gfx::SgShaderStage;
-use sokol::gfx::SgShaderStageDesc;
-use sokol::gfx::SgShaderUniformBlockDesc;
-use sokol::gfx::SgShaderUniformDesc;
-use sokol::gfx::SgUniformType;
-use sokol::gfx::SgUsage;
-use sokol::gfx::SgVertexAttrDesc;
-use sokol::gfx::SgVertexFormat;
+use sokol::app::*;
+use sokol::gfx::*;
 
 const SAMPLE_COUNT: i32 = 4;
 
@@ -278,21 +231,21 @@ impl SApp for Cube {
         let w: f32 = sapp_width() as f32;
         let h: f32 = sapp_height() as f32;
 
-        let proj = perspective(Deg(60.0), w / h, 0.01, 10.0);
-        let view = Matrix4::look_at(
-            Point3 { x: 0.0, y: 1.5, z: 6.0 },
-            Point3 { x: 0.0, y: 0.0, z: 0.0 },
-            Vector3 { x: 0.0, y: 1.0, z: 0.0 },
+        let proj = glm::perspective(w / h, 60.0 * PI / 180.0, 0.01, 10.0);
+        let view = glm::look_at(
+            &glm::vec3(0.0, 1.5, 6.0),
+            &glm::vec3(0.0, 0.0, 0.0),
+            &glm::vec3(0.0, 1.0, 0.0),
         );
-        let view_proj: Matrix4<f32> = proj * view;
+        let view_proj = proj * view;
 
         self.rx += 1.0;
         self.ry += 2.0;
-        let rxm = Matrix4::from_angle_x(Deg(self.rx));
-        let rym = Matrix4::from_angle_y(Deg(self.ry));
+        let rxm = glm::rotation(self.rx * PI / 180.0, &glm::vec3(1.0, 0.0, 0.0));
+        let rym = glm::rotation(self.ry * PI / 180.0, &glm::vec3(0.0, 1.0, 0.0));
         let model = rxm * rym;
 
-        let mvp: [[f32; 4]; 4] = array4x4(view_proj * model);
+        let mvp: [[f32; 4]; 4] = (view_proj * model).into();
 
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
         sg_apply_draw_state(&self.draw_state);
