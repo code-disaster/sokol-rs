@@ -55,9 +55,8 @@ mod ffi {
 
     #[repr(C)]
     #[derive(Default)]
-    pub struct SgDrawState {
+    pub struct SgBindings {
         _start_canary: u32,
-        pipeline: super::SgPipeline,
         vertex_buffers: [super::SgBuffer; SG_MAX_SHADERSTAGE_BUFFERS],
         vertex_buffer_offsets: [c_int; SG_MAX_SHADERSTAGE_BUFFERS],
         index_buffer: super::SgBuffer,
@@ -67,36 +66,35 @@ mod ffi {
         _end_canary: u32,
     }
 
-    impl SgDrawState {
-        pub fn make(draw_state: &super::SgDrawState) -> SgDrawState {
-            let mut ds = SgDrawState {
-                pipeline: (*draw_state).pipeline,
-                index_buffer: (*draw_state).index_buffer,
-                index_buffer_offset: (*draw_state).index_buffer_offset,
+    impl SgBindings {
+        pub fn make(bindings: &super::SgBindings) -> SgBindings {
+            let mut b = SgBindings {
+                index_buffer: (*bindings).index_buffer,
+                index_buffer_offset: (*bindings).index_buffer_offset,
                 ..Default::default()
             };
 
-            Self::collect_buffers(&mut ds, draw_state);
+            Self::collect_buffers(&mut b, bindings);
 
-            ds
+            b
         }
 
-        fn collect_buffers(draw_state: &mut SgDrawState,
-                           src: &super::SgDrawState) {
+        fn collect_buffers(bindings: &mut SgBindings,
+                           src: &super::SgBindings) {
             for (idx, vb) in src.vertex_buffers.iter().enumerate() {
-                draw_state.vertex_buffers[idx] = *vb;
+                bindings.vertex_buffers[idx] = *vb;
             }
 
             for (idx, vb_offs) in src.vertex_buffer_offsets.iter().enumerate() {
-                draw_state.vertex_buffer_offsets[idx] = *vb_offs;
+                bindings.vertex_buffer_offsets[idx] = *vb_offs;
             }
 
             for (idx, img) in src.vs_images.iter().enumerate() {
-                draw_state.vs_images[idx] = *img;
+                bindings.vs_images[idx] = *img;
             }
 
             for (idx, img) in src.fs_images.iter().enumerate() {
-                draw_state.fs_images[idx] = *img;
+                bindings.fs_images[idx] = *img;
             }
         }
     }
@@ -213,7 +211,7 @@ mod ffi {
             };
 
             match content {
-                None => {},
+                None => {}
                 Some(content) => {
                     for (idx, (data, size)) in content.iter().enumerate() {
                         let ptr = *data as *const T;
@@ -647,11 +645,12 @@ mod ffi {
         pub fn sg_apply_scissor_rect(x: c_int, y: c_int,
                                      width: c_int, height: c_int,
                                      origin_top_left: bool);
-        pub fn sg_apply_draw_state(ds: *const SgDrawState);
-        pub fn sg_apply_uniform_block(stage: super::SgShaderStage,
-                                      ub_index: c_int,
-                                      data: *const c_void,
-                                      num_bytes: c_int);
+        pub fn sg_apply_pipeline(pip: super::SgPipeline);
+        pub fn sg_apply_bindings(bindings: *const SgBindings);
+        pub fn sg_apply_uniforms(stage: super::SgShaderStage,
+                                 ub_index: c_int,
+                                 data: *const c_void,
+                                 num_bytes: c_int);
         pub fn sg_draw(base_element: c_int,
                        num_elements: c_int,
                        num_instances: c_int);
@@ -1128,8 +1127,7 @@ pub struct SgPassAction {
 }
 
 #[derive(Default)]
-pub struct SgDrawState {
-    pub pipeline: SgPipeline,
+pub struct SgBindings {
     pub vertex_buffers: Vec<SgBuffer>,
     pub vertex_buffer_offsets: Vec<i32>,
     pub index_buffer: SgBuffer,
@@ -1525,23 +1523,29 @@ pub fn sg_apply_scissor_rect(x: i32, y: i32,
     }
 }
 
-pub fn sg_apply_draw_state(ds: &SgDrawState) {
+pub fn sg_apply_pipeline(pip: SgPipeline) {
     unsafe {
-        ffi::sg_apply_draw_state(&ffi::SgDrawState::make(ds));
+        ffi::sg_apply_pipeline(pip);
     }
 }
 
-pub fn sg_apply_uniform_block<T>(stage: SgShaderStage,
-                                 ub_index: i32,
-                                 data: &T,
-                                 num_bytes: i32) {
+pub fn sg_apply_bindings(bindings: &SgBindings) {
+    unsafe {
+        ffi::sg_apply_bindings(&ffi::SgBindings::make(bindings));
+    }
+}
+
+pub fn sg_apply_uniforms<T>(stage: SgShaderStage,
+                            ub_index: i32,
+                            data: &T,
+                            num_bytes: i32) {
     let ptr = data as *const T;
 
     unsafe {
-        ffi::sg_apply_uniform_block(stage,
-                                    ub_index,
-                                    ptr as *const c_void,
-                                    num_bytes);
+        ffi::sg_apply_uniforms(stage,
+                               ub_index,
+                               ptr as *const c_void,
+                               num_bytes);
     }
 }
 

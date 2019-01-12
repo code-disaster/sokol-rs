@@ -20,7 +20,7 @@ pub struct SgImGui {
     font_image: SgImage,
     shader: SgShader,
     pipeline: SgPipeline,
-    draw_state: SgDrawState,
+    bindings: SgBindings,
 }
 
 /// Creates resources and states to render ImGui content.
@@ -184,11 +184,10 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
         ..Default::default()
     });
 
-    let draw_state = SgDrawState {
+    let bindings = SgBindings {
         vertex_buffers: vec![vb],
         index_buffer: ib,
         fs_images: vec![font_image],
-        pipeline,
         ..Default::default()
     };
 
@@ -198,7 +197,7 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
         font_image,
         shader,
         pipeline,
-        draw_state,
+        bindings,
     }
 }
 
@@ -251,19 +250,19 @@ pub fn sg_imgui_draw(ui: &SgImGui) {
                 continue;
             }
 
-            let draw_state = SgDrawState {
-                pipeline: ui.draw_state.pipeline,
-                vertex_buffers: vec![ui.draw_state.vertex_buffers[0]],
+            let bindings = SgBindings {
+                vertex_buffers: vec![ui.bindings.vertex_buffers[0]],
                 vertex_buffer_offsets: vec![vb_offs],
-                index_buffer: ui.draw_state.index_buffer,
+                index_buffer: ui.bindings.index_buffer,
                 index_buffer_offset: ib_offs,
                 vs_images: vec![],
-                fs_images: vec![ui.draw_state.fs_images[0]],
+                fs_images: vec![ui.bindings.fs_images[0]],
             };
 
-            sg_apply_draw_state(&draw_state);
+            sg_apply_pipeline(ui.pipeline);
+            sg_apply_bindings(&bindings);
 
-            sg_apply_uniform_block(SgShaderStage::Vertex, 0, &uniforms, 16);
+            sg_apply_uniforms(SgShaderStage::Vertex, 0, &uniforms, 16);
 
             let mut base_element: i32 = 0;
             for cmd in cl.cmd_buffer.as_slice() {

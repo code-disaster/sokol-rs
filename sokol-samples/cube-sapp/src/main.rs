@@ -11,7 +11,8 @@ const SAMPLE_COUNT: i32 = 4;
 
 #[derive(Default)]
 struct Cube {
-    draw_state: SgDrawState,
+    pipeline: SgPipeline,
+    bindings: SgBindings,
     rx: f32,
     ry: f32,
 }
@@ -169,7 +170,7 @@ impl SApp for Cube {
             },
         );
 
-        let pip = sg_make_pipeline(
+        self.pipeline = sg_make_pipeline(
             &SgPipelineDesc {
                 layout: SgLayoutDesc {
                     buffers: vec!(
@@ -209,8 +210,7 @@ impl SApp for Cube {
             }
         );
 
-        self.draw_state = SgDrawState {
-            pipeline: pip,
+        self.bindings = SgBindings {
             vertex_buffers: vec!(vbuf),
             index_buffer: ibuf,
             ..Default::default()
@@ -248,8 +248,9 @@ impl SApp for Cube {
         let mvp: [[f32; 4]; 4] = (view_proj * model).into();
 
         sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
-        sg_apply_draw_state(&self.draw_state);
-        sg_apply_uniform_block(
+        sg_apply_pipeline(self.pipeline);
+        sg_apply_bindings(&self.bindings);
+        sg_apply_uniforms(
             SgShaderStage::Vertex,
             0,
             &mvp,

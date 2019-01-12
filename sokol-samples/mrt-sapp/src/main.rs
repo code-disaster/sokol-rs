@@ -12,9 +12,12 @@ const MSAA_SAMPLES: i32 = 4;
 struct MRT {
     offscreen_pass_desc: SgPassDesc,
     offscreen_pass: SgPass,
-    offscreen_draw_state: SgDrawState,
-    fsq_draw_state: SgDrawState,
-    dbg_draw_state: SgDrawState,
+    offscreen_pipeline: SgPipeline,
+    offscreen_bindings: SgBindings,
+    fsq_pipeline: SgPipeline,
+    fsq_bindings: SgBindings,
+    dbg_pipeline: SgPipeline,
+    dbg_bindings: SgBindings,
     offscreen_pass_action: SgPassAction,
     default_pass_action: SgPassAction,
     rx: f32,
@@ -72,9 +75,9 @@ impl MRT {
         };
         self.offscreen_pass = sg_make_pass(&self.offscreen_pass_desc);
 
-        self.fsq_draw_state.fs_images.clear();
+        self.fsq_bindings.fs_images.clear();
         for att in &self.offscreen_pass_desc.color_attachments {
-            self.fsq_draw_state.fs_images.push(att.image);
+            self.fsq_bindings.fs_images.push(att.image);
         }
     }
 }
@@ -255,7 +258,7 @@ impl SApp for MRT {
             },
         );
 
-        let cube_pip = sg_make_pipeline(
+        self.offscreen_pipeline = sg_make_pipeline(
             &SgPipelineDesc {
                 layout: SgLayoutDesc {
                     buffers: vec!(
@@ -303,8 +306,7 @@ impl SApp for MRT {
             }
         );
 
-        self.offscreen_draw_state = SgDrawState {
-            pipeline: cube_pip,
+        self.offscreen_bindings = SgBindings {
             vertex_buffers: vec!(cube_vbuf),
             index_buffer: cube_ibuf,
             ..Default::default()
@@ -473,7 +475,7 @@ impl SApp for MRT {
             },
         );
 
-        let fsq_pip = sg_make_pipeline(
+        self.fsq_pipeline = sg_make_pipeline(
             &SgPipelineDesc {
                 layout: SgLayoutDesc {
                     attrs: vec![
@@ -496,8 +498,7 @@ impl SApp for MRT {
             }
         );
 
-        self.fsq_draw_state = SgDrawState {
-            pipeline: fsq_pip,
+        self.fsq_bindings = SgBindings {
             vertex_buffers: vec!(quad_vbuf),
             fs_images: vec![
                 self.offscreen_pass_desc.color_attachments[0].image,
@@ -568,42 +569,43 @@ impl SApp for MRT {
             )
         };
 
-        self.dbg_draw_state = SgDrawState {
-            pipeline: sg_make_pipeline(&SgPipelineDesc {
-                layout: SgLayoutDesc {
-                    attrs: vec![
-                        SgVertexAttrDesc {
-                            name: "pos",
-                            sem_name: "POSITION",
-                            format: SgVertexFormat::Float2,
-                            ..Default::default()
+        self.dbg_pipeline = sg_make_pipeline(&SgPipelineDesc {
+            layout: SgLayoutDesc {
+                attrs: vec![
+                    SgVertexAttrDesc {
+                        name: "pos",
+                        sem_name: "POSITION",
+                        format: SgVertexFormat::Float2,
+                        ..Default::default()
+                    },
+                ],
+                ..Default::default()
+            },
+            primitive_type: SgPrimitiveType::TriangleStrip,
+            shader: sg_make_shader(&SgShaderDesc {
+                vs: SgShaderStageDesc {
+                    source: Some(dbg_vs_src),
+                    ..Default::default()
+                },
+                fs: SgShaderStageDesc {
+                    source: Some(dbg_fs_src),
+                    images: vec![
+                        SgShaderImageDesc {
+                            name: "tex",
+                            image_type: SgImageType::Texture2D,
                         },
                     ],
                     ..Default::default()
                 },
-                primitive_type: SgPrimitiveType::TriangleStrip,
-                shader: sg_make_shader(&SgShaderDesc {
-                    vs: SgShaderStageDesc {
-                        source: Some(dbg_vs_src),
-                        ..Default::default()
-                    },
-                    fs: SgShaderStageDesc {
-                        source: Some(dbg_fs_src),
-                        images: vec![
-                            SgShaderImageDesc {
-                                name: "tex",
-                                image_type: SgImageType::Texture2D,
-                            },
-                        ],
-                        ..Default::default()
-                    },
-                }),
-                rasterizer: SgRasterizerState {
-                    sample_count: MSAA_SAMPLES,
-                    ..Default::default()
-                },
-                ..Default::default()
             }),
+            rasterizer: SgRasterizerState {
+                sample_count: MSAA_SAMPLES,
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+
+        self.dbg_bindings = SgBindings {
             vertex_buffers: vec![quad_vbuf],
             ..Default::default()
         };
@@ -630,8 +632,9 @@ impl SApp for MRT {
         let mvp: [[f32; 4]; 4] = (view_proj * model).into();
 
         sg_begin_pass(&self.offscreen_pass, &self.offscreen_pass_action);
-        sg_apply_draw_state(&self.offscreen_draw_state);
-        sg_apply_uniform_block(SgShaderStage::Vertex, 0, &mvp, 64);
+        sg_apply_pipeline(self.offscreen_pipeline);
+        sg_apply_bindings(&self.offscreen_bindings);
+        sg_apply_uniforms(SgShaderStage::Vertex, 0, &mvp, 64);
         sg_draw(0, 36, 1);
         sg_end_pass();
 
@@ -640,14 +643,16 @@ impl SApp for MRT {
         ];
 
         sg_begin_default_pass(&self.default_pass_action, sapp_width(), sapp_height());
-        sg_apply_draw_state(&self.fsq_draw_state);
-        sg_apply_uniform_block(SgShaderStage::Vertex, 0, &offset, 8);
+        sg_apply_pipeline(self.fsq_pipeline);
+        sg_apply_bindings(&self.fsq_bindings);
+        sg_apply_uniforms(SgShaderStage::Vertex, 0, &offset, 8);
         sg_draw(0, 4, 1);
 
+        sg_apply_pipeline(self.dbg_pipeline);
         for i in 0..3 {
             sg_apply_viewport(i * 100, 0, 100, 100, false);
-            self.dbg_draw_state.fs_images = vec![self.offscreen_pass_desc.color_attachments[i as usize].image];
-            sg_apply_draw_state(&self.dbg_draw_state);
+            self.dbg_bindings.fs_images = vec![self.offscreen_pass_desc.color_attachments[i as usize].image];
+            sg_apply_bindings(&self.dbg_bindings);
             sg_draw(0, 4, 1);
         }
 
@@ -670,9 +675,12 @@ fn main() {
     let mrt_app = MRT {
         offscreen_pass_desc: Default::default(),
         offscreen_pass: Default::default(),
-        offscreen_draw_state: Default::default(),
-        fsq_draw_state: Default::default(),
-        dbg_draw_state: Default::default(),
+        offscreen_pipeline: Default::default(),
+        offscreen_bindings: Default::default(),
+        fsq_pipeline: Default::default(),
+        fsq_bindings: Default::default(),
+        dbg_pipeline: Default::default(),
+        dbg_bindings: Default::default(),
         offscreen_pass_action: SgPassAction {
             colors: vec!(
                 SgColorAttachmentAction {

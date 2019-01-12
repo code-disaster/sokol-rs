@@ -77,6 +77,7 @@ fn main() {
     }
 
     build
+        .flag("-DSOKOL_NO_DEPRECATED")
         .compile("sokol");
 
     //
