@@ -8,12 +8,18 @@ cross-platform C libraries.
 This is a minimal example of using sokol::app and sokol::gfx to create a window, then clear
 its content each frame with a solid color.
 
-~~~
+```rust
+# extern crate sokol;
+use sokol::{
+    app::*,
+    gfx::*,
+};
+
 struct ExampleApp {
     pass_action: SgPassAction,
 }
 
-impl SappCallbacks for ExampleApp {
+impl SApp for ExampleApp {
     fn sapp_init(&mut self) {
         sg_setup(&SgDesc {
             ..Default::default()
@@ -21,7 +27,7 @@ impl SappCallbacks for ExampleApp {
     }
 
     fn sapp_frame(&mut self) {
-        sg_begin_default_pass(&pass_action, sapp_width(), sapp_height());
+        sg_begin_default_pass(&self.pass_action, sapp_width(), sapp_height());
         sg_end_pass();
         sg_commit();
     }
@@ -29,10 +35,12 @@ impl SappCallbacks for ExampleApp {
     fn sapp_cleanup(&mut self) {
         sg_shutdown();
     }
-}
-~~~
 
-~~~
+    fn sapp_event(&mut self, _event: SAppEvent) {
+        // Ignore events
+    }
+}
+
 fn main() {
     let app = ExampleApp {
         pass_action: SgPassAction {
@@ -46,12 +54,12 @@ fn main() {
         }
     };
 
-    sapp_main(app, SappDesc {
+    sapp_main(app, SAppDesc {
         window_title: "Example".to_string(),
         ..Default::default()
     });
 }
-~~~
+```
 */
 
 #[macro_use]
