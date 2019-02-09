@@ -4,6 +4,7 @@
 //! header-only C library.
 
 use std::os::raw::c_void;
+use std::fmt;
 
 mod ffi {
     use std::ffi::CString;
@@ -11,6 +12,7 @@ mod ffi {
     use std::os::raw::c_int;
     use std::os::raw::c_void;
     use std::ptr::null;
+    use std::fmt;
 
     use crate::app::ffi::*;
 
@@ -27,6 +29,7 @@ mod ffi {
     const _SG_MAX_TEXTUREARRAY_LAYERS: usize = 128;
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgPassAction {
         _start_canary: u32,
         colors: [super::SgColorAttachmentAction; SG_MAX_COLOR_ATTACHMENTS],
@@ -54,7 +57,7 @@ mod ffi {
     }
 
     #[repr(C)]
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct SgBindings {
         _start_canary: u32,
         vertex_buffers: [super::SgBuffer; SG_MAX_SHADERSTAGE_BUFFERS],
@@ -100,6 +103,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgDesc {
         _start_canary: u32,
         desc: super::SgDesc,
@@ -137,6 +141,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgBufferDesc {
         _start_canary: u32,
         size: c_int,
@@ -172,7 +177,7 @@ mod ffi {
     }
 
     #[repr(C)]
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug)]
     struct SgSubImageContent {
         ptr: *const c_void,
         size: c_int,
@@ -204,6 +209,24 @@ mod ffi {
         }
     }
 
+    // We can't [derive(Debug)] SgImageContent because fixed-arrays don't impl
+    // Debug if their size is over 32.
+    impl fmt::Debug for SgImageContent {
+        fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+            struct Helper([SgSubImageContent; 6 * SG_MAX_MIPMAPS]);
+
+            impl fmt::Debug for Helper {
+                fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    self.0[..].fmt(formatter)
+                }
+            }
+
+            f.debug_struct("SgImageContent")
+                .field("subimage", &Helper(self.subimage))
+            .finish()
+        }
+    }
+
     impl SgImageContent {
         pub fn make<T>(content: Option<&Vec<(*const T, i32)>>) -> SgImageContent {
             let mut cnt = SgImageContent {
@@ -229,6 +252,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgImageDesc {
         _start_canary: u32,
         image_type: super::SgImageType,
@@ -286,7 +310,7 @@ mod ffi {
     }
 
     #[repr(C)]
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug)]
     struct SgShaderUniformDesc {
         name: *const c_char,
         uniform_type: super::SgUniformType,
@@ -304,14 +328,14 @@ mod ffi {
     }
 
     #[repr(C)]
-    #[derive(Copy, Clone, Default)]
+    #[derive(Copy, Clone, Default, Debug)]
     struct SgShaderUniformBlockDesc {
         size: c_int,
         uniforms: [SgShaderUniformDesc; SG_MAX_UB_MEMBERS],
     }
 
     #[repr(C)]
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug)]
     struct SgShaderImageDesc {
         name: *const c_char,
         image_type: super::SgImageType,
@@ -327,6 +351,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     struct SgShaderStageDesc {
         source: *const c_char,
         byte_code: *const u8,
@@ -354,6 +379,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgShaderDesc {
         _start_canary: u32,
         vs: SgShaderStageDesc,
@@ -449,7 +475,7 @@ mod ffi {
     }
 
     #[repr(C)]
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct SgBufferLayoutDesc {
         pub stride: c_int,
         pub step_func: super::SgVertexStep,
@@ -457,6 +483,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgVertexAttrDesc {
         name: *const c_char,
         sem_name: *const c_char,
@@ -480,13 +507,14 @@ mod ffi {
     }
 
     #[repr(C)]
-    #[derive(Default)]
+    #[derive(Default, Debug)]
     pub struct SgLayoutDesc {
         buffers: [SgBufferLayoutDesc; SG_MAX_SHADERSTAGE_BUFFERS],
         attrs: [SgVertexAttrDesc; SG_MAX_VERTEX_ATTRIBUTES],
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgBlendState {
         enabled: bool,
         src_factor_rgb: super::SgBlendFactor,
@@ -503,6 +531,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgPipelineDesc {
         _start_canary: u32,
         layout: SgLayoutDesc,
@@ -580,6 +609,7 @@ mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SgPassDesc {
         _start_canary: u32,
         color_attachments: [super::SgAttachmentDesc; SG_MAX_COLOR_ATTACHMENTS],
@@ -665,37 +695,37 @@ mod ffi {
 */
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgBuffer {
     id: i32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgImage {
     id: i32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgShader {
     id: i32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgPipeline {
     id: i32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgPass {
     id: i32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgContext {
     id: i32,
 }
@@ -712,6 +742,7 @@ pub enum SgApi {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum SgFeature {
     Instancing,
     TextureCompressionDXT,
@@ -730,6 +761,7 @@ pub enum SgFeature {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum SgResourceState {
     Initial,
     Alloc,
@@ -739,7 +771,7 @@ pub enum SgResourceState {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgUsage {
     _Default,
     Immutable,
@@ -754,7 +786,7 @@ impl Default for SgUsage {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgBufferType {
     _Default,
     VertexBuffer,
@@ -768,7 +800,7 @@ impl Default for SgBufferType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgIndexType {
     _Default,
     None,
@@ -783,7 +815,7 @@ impl Default for SgIndexType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgImageType {
     _Default,
     Texture2D,
@@ -799,6 +831,7 @@ impl Default for SgImageType {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum SgCubeFace {
     PosX,
     NegX,
@@ -809,13 +842,14 @@ pub enum SgCubeFace {
 }
 
 #[repr(C)]
+#[derive(Debug)]
 pub enum SgShaderStage {
     Vertex,
     Fragment,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgPixelFormat {
     _Default,
     None,
@@ -850,7 +884,7 @@ impl Default for SgPixelFormat {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgPrimitiveType {
     _Default,
     Points,
@@ -867,7 +901,7 @@ impl Default for SgPrimitiveType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgFilter {
     _Default,
     Nearest,
@@ -885,7 +919,7 @@ impl Default for SgFilter {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgWrap {
     _Default,
     Repeat,
@@ -900,7 +934,7 @@ impl Default for SgWrap {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgVertexFormat {
     _Invalid,
     Float,
@@ -925,7 +959,7 @@ impl Default for SgVertexFormat {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgVertexStep {
     _Default,
     PerVertex,
@@ -939,7 +973,7 @@ impl Default for SgVertexStep {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgUniformType {
     _Invalid,
     Float,
@@ -956,7 +990,7 @@ impl Default for SgUniformType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgCullMode {
     _Default,
     None,
@@ -971,7 +1005,7 @@ impl Default for SgCullMode {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgFaceWinding {
     _Default,
     CCW,
@@ -985,7 +1019,7 @@ impl Default for SgFaceWinding {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgCompareFunc {
     _Default,
     Never,
@@ -1005,7 +1039,7 @@ impl Default for SgCompareFunc {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgStencilOp {
     _Default,
     Keep,
@@ -1025,7 +1059,7 @@ impl Default for SgStencilOp {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgBlendFactor {
     _Default,
     Zero,
@@ -1052,7 +1086,7 @@ impl Default for SgBlendFactor {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgBlendOp {
     _Default,
     Add,
@@ -1080,7 +1114,7 @@ bitflags! {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum SgAction {
     _Default,
     Clear,
@@ -1099,34 +1133,34 @@ impl Default for SgAction {
 */
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgColorAttachmentAction {
     pub action: SgAction,
     pub val: [f32; 4],
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgDepthAttachmentAction {
     pub action: SgAction,
     pub val: f32,
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgStencilAttachmentAction {
     pub action: SgAction,
     pub val: u8,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgPassAction {
     pub colors: Vec<SgColorAttachmentAction>,
     pub depth: SgDepthAttachmentAction,
     pub stencil: SgStencilAttachmentAction,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgBindings {
     pub vertex_buffers: Vec<SgBuffer>,
     pub vertex_buffer_offsets: Vec<i32>,
@@ -1137,7 +1171,7 @@ pub struct SgBindings {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgDesc {
     pub buffer_pool_size: i32,
     pub image_pool_size: i32,
@@ -1148,7 +1182,7 @@ pub struct SgDesc {
     pub gl_force_gles2: bool,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgBufferDesc {
     pub size: usize,
     pub buffer_type: SgBufferType,
@@ -1157,7 +1191,7 @@ pub struct SgBufferDesc {
 
 pub const SG_BUFFER_CONTENT_NONE: Option<&u8> = None;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgImageDesc {
     pub image_type: SgImageType,
     pub render_target: bool,
@@ -1180,26 +1214,26 @@ pub struct SgImageDesc {
 
 pub const SG_IMAGE_CONTENT_NONE: Option<&Vec<(*const u8, i32)>> = None;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgShaderUniformDesc<'a> {
     pub name: &'a str,
     pub uniform_type: SgUniformType,
     pub array_count: i32,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgShaderUniformBlockDesc<'a> {
     pub size: i32,
     pub uniforms: Vec<SgShaderUniformDesc<'a>>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgShaderImageDesc<'a> {
     pub name: &'a str,
     pub image_type: SgImageType,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgShaderStageDesc<'a> {
     pub source: Option<&'a str>,
     pub byte_code: Option<&'a [u8]>,
@@ -1208,12 +1242,13 @@ pub struct SgShaderStageDesc<'a> {
     pub images: Vec<SgShaderImageDesc<'a>>,
 }
 
+#[derive(Debug)]
 pub struct SgShaderDesc<'a> {
     pub vs: SgShaderStageDesc<'a>,
     pub fs: SgShaderStageDesc<'a>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgBufferLayoutDesc {
     pub stride: usize,
     pub step_func: SgVertexStep,
@@ -1221,7 +1256,7 @@ pub struct SgBufferLayoutDesc {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgStencilState {
     pub fail_op: SgStencilOp,
     pub depth_fail_op: SgStencilOp,
@@ -1230,7 +1265,7 @@ pub struct SgStencilState {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgDepthStencilState {
     pub stencil_front: SgStencilState,
     pub stencil_back: SgStencilState,
@@ -1242,7 +1277,7 @@ pub struct SgDepthStencilState {
     pub stencil_ref: u8,
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgBlendState {
     pub enabled: bool,
     pub src_factor_rgb: SgBlendFactor,
@@ -1259,7 +1294,7 @@ pub struct SgBlendState {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgRasterizerState {
     pub alpha_to_coverage_enabled: bool,
     pub cull_mode: SgCullMode,
@@ -1270,7 +1305,7 @@ pub struct SgRasterizerState {
     pub depth_bias_clamp: f32,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgVertexAttrDesc<'a> {
     pub name: &'a str,
     pub sem_name: &'a str,
@@ -1280,13 +1315,13 @@ pub struct SgVertexAttrDesc<'a> {
     pub format: SgVertexFormat,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgLayoutDesc<'a> {
     pub buffers: Vec<SgBufferLayoutDesc>,
     pub attrs: Vec<SgVertexAttrDesc<'a>>,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgPipelineDesc<'a> {
     pub shader: SgShader,
     pub layout: SgLayoutDesc<'a>,
@@ -1313,15 +1348,27 @@ impl Default for SgAttachmentDescValue {
     }
 }
 
+impl fmt::Debug for SgAttachmentDescValue {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        unsafe {
+            f.debug_struct("(union) SgAttachmentDescValue")
+                .field("face",  &self.face)
+                .field("layer", &self.layer)
+                .field("slice", &self.slice)
+            .finish()
+        }
+    }
+}
+
 #[repr(C)]
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 pub struct SgAttachmentDesc {
     pub image: SgImage,
     pub mip_level: i32,
     pub u: SgAttachmentDescValue,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SgPassDesc {
     pub color_attachments: Vec<SgAttachmentDesc>,
     pub depth_stencil_attachment: SgAttachmentDesc,

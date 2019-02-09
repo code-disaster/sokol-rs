@@ -8,6 +8,7 @@ pub mod ffi {
     use std::os::raw::c_void;
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SAudioDesc {
         sample_rate: c_int,
         num_channels: c_int,
@@ -47,7 +48,7 @@ pub mod ffi {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SAudioDesc {
     pub sample_rate: i32,
     pub num_channels: i32,
