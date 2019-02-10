@@ -3,16 +3,16 @@
 //! A Rust API to the [sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_gfx.h)
 //! header-only C library.
 
-use std::os::raw::c_void;
 use std::fmt;
+use std::os::raw::c_void;
 
 mod ffi {
     use std::ffi::CString;
+    use std::fmt;
     use std::os::raw::c_char;
     use std::os::raw::c_int;
     use std::os::raw::c_void;
     use std::ptr::null;
-    use std::fmt;
 
     use crate::app::ffi::*;
 
@@ -223,7 +223,7 @@ mod ffi {
 
             f.debug_struct("SgImageContent")
                 .field("subimage", &Helper(self.subimage))
-            .finish()
+                .finish()
         }
     }
 
@@ -1352,10 +1352,10 @@ impl fmt::Debug for SgAttachmentDescValue {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         unsafe {
             f.debug_struct("(union) SgAttachmentDescValue")
-                .field("face",  &self.face)
+                .field("face", &self.face)
                 .field("layer", &self.layer)
                 .field("slice", &self.slice)
-            .finish()
+                .finish()
         }
     }
 }
