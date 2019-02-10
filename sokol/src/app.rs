@@ -22,7 +22,7 @@ pub mod ffi {
     const _SAPP_MAX_KEYCODES: usize = 512;
 
     #[repr(C)]
-    #[derive(Copy, Clone)]
+    #[derive(Copy, Clone, Debug)]
     pub struct SAppEvent {
         event_type: super::SAppEventType,
         frame_count: u32,
@@ -43,6 +43,7 @@ pub mod ffi {
     }
 
     #[repr(C)]
+    #[derive(Debug)]
     pub struct SAppDesc {
         init_cb: extern fn(),
         frame_cb: extern fn(),
@@ -198,7 +199,7 @@ pub mod ffi {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum SAppEventType {
     Invalid,
     KeyDown,
@@ -223,7 +224,7 @@ pub enum SAppEventType {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum SAppKeycode {
     KeyInvalid = 0,
     KeySpace = 32,
@@ -349,7 +350,7 @@ pub enum SAppKeycode {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Copy, Clone, PartialEq, Debug)]
 pub enum SAppMouseButton {
     Invalid = -1,
     Left = 0,
@@ -367,7 +368,7 @@ bitflags! {
 }
 
 #[repr(C)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct SAppTouchPoint {
     pub identifier: usize,
     pub pos_x: f32,
@@ -375,6 +376,7 @@ pub struct SAppTouchPoint {
     pub changed: bool,
 }
 
+#[derive(Debug)]
 pub struct SAppEvent {
     pub event_type: SAppEventType,
     pub frame_count: u32,
@@ -394,7 +396,7 @@ pub struct SAppEvent {
     pub framebuffer_height: i32,
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct SAppDesc {
     pub width: i32,
     pub height: i32,
