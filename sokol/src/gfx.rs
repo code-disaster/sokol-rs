@@ -228,7 +228,7 @@ mod ffi {
     }
 
     impl SgImageContent {
-        pub fn make<T>(content: Option<&Vec<(*const T, i32)>>) -> SgImageContent {
+        pub fn make<T>(content: Option<&[(*const T, i32)]>) -> SgImageContent {
             let mut cnt = SgImageContent {
                 ..Default::default()
             };
@@ -280,7 +280,7 @@ mod ffi {
     }
 
     impl SgImageDesc {
-        pub fn make<T>(content: Option<&Vec<(*const T, i32)>>, desc: &super::SgImageDesc) -> SgImageDesc {
+        pub fn make<T>(content: Option<&[(*const T, i32)]>, desc: &super::SgImageDesc) -> SgImageDesc {
             SgImageDesc {
                 _start_canary: 0,
                 image_type: desc.image_type,
@@ -440,7 +440,7 @@ mod ffi {
         }
 
         fn collect_uniforms(desc: &mut SgShaderUniformBlockDesc,
-                            src: &Vec<super::SgShaderUniformDesc>) {
+                            src: &[super::SgShaderUniformDesc]) {
             for (idx, u) in src.iter().enumerate() {
                 let dst = &mut desc.uniforms[idx];
 
@@ -453,7 +453,7 @@ mod ffi {
         }
 
         fn collect_uniform_blocks(desc: &mut SgShaderStageDesc,
-                                  src: &Vec<super::SgShaderUniformBlockDesc>) {
+                                  src: &[super::SgShaderUniformBlockDesc]) {
             for (idx, ub) in src.iter().enumerate() {
                 let dst = &mut desc.uniform_blocks[idx];
                 dst.size = ub.size;
@@ -462,7 +462,7 @@ mod ffi {
         }
 
         fn collect_images(desc: &mut SgShaderStageDesc,
-                          src: &Vec<super::SgShaderImageDesc>) {
+                          src: &[super::SgShaderImageDesc]) {
             for (idx, img) in src.iter().enumerate() {
                 let dst = &mut desc.images[idx];
 
@@ -580,7 +580,7 @@ mod ffi {
         }
 
         fn collect_layout_buffers(desc: &mut SgLayoutDesc,
-                                  src: &Vec<super::SgBufferLayoutDesc>) {
+                                  src: &[super::SgBufferLayoutDesc]) {
             for (idx, buf) in src.iter().enumerate() {
                 desc.buffers[idx] = SgBufferLayoutDesc {
                     stride: buf.stride as c_int,
@@ -591,7 +591,7 @@ mod ffi {
         }
 
         fn collect_layout_attrs(desc: &mut SgLayoutDesc,
-                                src: &Vec<super::SgVertexAttrDesc>) {
+                                src: &[super::SgVertexAttrDesc]) {
             for (idx, attr) in src.iter().enumerate() {
                 let name = CString::new(attr.name).unwrap();
                 let sem_name = CString::new(attr.sem_name).unwrap();
@@ -1212,7 +1212,7 @@ pub struct SgImageDesc {
     pub max_lod: f32,
 }
 
-pub const SG_IMAGE_CONTENT_NONE: Option<&Vec<(*const u8, i32)>> = None;
+pub const SG_IMAGE_CONTENT_NONE: Option<&[(*const u8, i32)]> = None;
 
 #[derive(Default, Debug)]
 pub struct SgShaderUniformDesc<'a> {
@@ -1429,7 +1429,7 @@ pub fn sg_make_buffer<T>(content: Option<&T>, desc: &SgBufferDesc) -> SgBuffer {
     }
 }
 
-pub fn sg_make_image<T>(content: Option<&Vec<(*const T, i32)>>, desc: &SgImageDesc) -> SgImage {
+pub fn sg_make_image<T>(content: Option<&[(*const T, i32)]>, desc: &SgImageDesc) -> SgImage {
     unsafe {
         ffi::sg_make_image(&ffi::SgImageDesc::make(content, desc))
     }
@@ -1490,7 +1490,7 @@ pub fn sg_update_buffer<T>(buf: SgBuffer, content: &T, content_size: i32) {
     }
 }
 
-pub fn sg_update_image<T>(img: SgImage, content: &Vec<(*const T, i32)>) {
+pub fn sg_update_image<T>(img: SgImage, content: &[(*const T, i32)]) {
     unsafe {
         ffi::sg_update_image(img, &ffi::SgImageContent::make(Some(content)));
     }
@@ -1546,11 +1546,11 @@ pub fn sg_begin_default_pass(pass_action: &SgPassAction, width: i32, height: i32
     }
 }
 
-pub fn sg_begin_pass(pass: &SgPass,
+pub fn sg_begin_pass(pass: SgPass,
                      pass_action: &SgPassAction) {
     let action = ffi::SgPassAction::make(pass_action);
     unsafe {
-        ffi::sg_begin_pass(pass.clone(), &action);
+        ffi::sg_begin_pass(pass, &action);
     }
 }
 

@@ -154,9 +154,9 @@ pub mod ffi {
 
     #[no_mangle]
     pub extern fn event_cb(event: *const SAppEvent) {
-        let e = unsafe {
+        let e = *unsafe {
             &*event
-        }.clone();
+        };
 
         super::SAppImpl::get().event_cb(super::SAppEvent {
             event_type: e.event_type,
@@ -485,12 +485,10 @@ impl SAppImpl {
     }
 
     pub fn get() -> &'static mut SAppImpl {
-        let app = unsafe {
+        unsafe {
             let app_ptr = ffi::sapp_get_user_ptr() as *mut SAppImpl;
             &mut *app_ptr
-        };
-
-        app
+        }
     }
 }
 
