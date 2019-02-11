@@ -217,7 +217,7 @@ mod ffi {
 
             impl fmt::Debug for Helper {
                 fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                    self.0[..].fmt(formatter)
+                    fmt::Debug::fmt(&self.0[..], formatter)
                 }
             }
 
