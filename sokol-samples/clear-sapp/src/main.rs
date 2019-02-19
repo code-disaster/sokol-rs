@@ -2,7 +2,7 @@ extern crate sokol;
 
 use sokol::app::SApp;
 use sokol::app::sapp_height;
-use sokol::app::sapp_main;
+use sokol::app::sapp_run;
 use sokol::app::sapp_width;
 use sokol::app::SAppDesc;
 use sokol::app::SAppEvent;
@@ -58,7 +58,7 @@ fn main() {
 
     let title = format!("clear-sapp.rs ({:?})", sg_api());
 
-    let exit_code = sapp_main(
+    let exit_code = sapp_run(
         clear_app,
         SAppDesc {
             width: 400,

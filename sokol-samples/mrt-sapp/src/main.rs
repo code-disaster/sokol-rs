@@ -707,7 +707,7 @@ fn main() {
 
     let title = format!("mrt-sapp.rs ({:?})", sg_api());
 
-    let exit_code = sapp_main(
+    let exit_code = sapp_run(
         mrt_app,
         SAppDesc {
             width: 800,

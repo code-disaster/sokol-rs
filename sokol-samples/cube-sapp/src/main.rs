@@ -274,7 +274,7 @@ fn main() {
 
     let title = format!("cube-sapp.rs ({:?})", sg_api());
 
-    let exit_code = sapp_main(
+    let exit_code = sapp_run(
         cube,
         SAppDesc {
             width: 800,

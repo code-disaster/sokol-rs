@@ -89,7 +89,7 @@ fn main() {
 
     let title = format!("imgui-sapp.rs ({:?})", sg_api());
 
-    let exit_code = sapp_main(
+    let exit_code = sapp_run(
         app,
         SAppDesc {
             width: 1280,

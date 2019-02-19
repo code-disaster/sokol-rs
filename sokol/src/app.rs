@@ -3,10 +3,6 @@
 //! A Rust API to the [sokol_app.h](https://github.com/floooh/sokol/blob/master/sokol_app.h)
 //! header-only C library.
 
-use std::env;
-use std::ffi::CString;
-use std::os::raw::c_char;
-use std::os::raw::c_int;
 use std::os::raw::c_void;
 
 pub mod ffi {
@@ -68,11 +64,8 @@ pub mod ffi {
     }
 
     extern {
-        /// Native `main()` function redefined to `main_c()` to avoid
-        /// naming conflicts when linking with Rust's `fn main()`.
-        ///
-        /// This function is called by `sapp_main()`.
-        pub fn main_c(argc: c_int, argv: *const *const c_char) -> c_int;
+        /// sokol entry point (compiled with SOKOL_NO_ENTRY)
+        pub fn sapp_run(desc: *const SAppDesc) -> c_int;
 
         pub fn sapp_isvalid() -> bool;
         pub fn sapp_width() -> c_int;
@@ -105,8 +98,7 @@ pub mod ffi {
         pub fn sapp_get_user_ptr() -> *mut c_void;
     }
 
-    #[no_mangle]
-    pub extern "C" fn sokol_main(_argc: c_int, _argv: *const *const c_char) -> SAppDesc {
+    pub fn sapp_make_desc() -> SAppDesc {
         let app = super::SAppImpl::get();
         let desc = &app.desc;
 
@@ -359,6 +351,7 @@ pub enum SAppMouseButton {
 }
 
 bitflags! {
+    #[repr(C)]
     pub struct SAppModifier: u32 {
         const Shift = 0x01;
         const Control = 0x02;
@@ -492,8 +485,8 @@ impl SAppImpl {
     }
 }
 
-pub fn sapp_main<S: SApp + 'static>(callbacks: S,
-                                    desc: SAppDesc) -> i32 {
+pub fn sapp_run<S: SApp + 'static>(callbacks: S,
+                                   desc: SAppDesc) -> i32 {
     let app = SAppImpl::new(callbacks, desc);
 
     {
@@ -503,21 +496,8 @@ pub fn sapp_main<S: SApp + 'static>(callbacks: S,
         }
     }
 
-    // transform command line into (argc, argv) style
-
-    let args: Vec<CString> = env::args().filter_map(|arg| {
-        CString::new(arg).ok()
-    }).collect();
-
-    let c_args: Vec<*const c_char> = args.iter().map(|arg| {
-        arg.as_ptr()
-    }).collect();
-
-    // invoke native main() function (renamed to main_c() at compile time to
-    // not conflict with Rust's main())
-
     unsafe {
-        ffi::main_c(c_args.len() as c_int, c_args.as_ptr())
+        ffi::sapp_run(&ffi::sapp_make_desc())
     }
 }
 

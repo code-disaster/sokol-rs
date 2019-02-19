@@ -54,7 +54,7 @@ fn main() {
         }
     };
 
-    sapp_main(app, SAppDesc {
+    sapp_run(app, SAppDesc {
         window_title: "Example".to_string(),
         ..Default::default()
     });

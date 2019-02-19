@@ -12,7 +12,7 @@ This repository contains source code of the following Rust crates and libraries:
 
 ## How to build
 
-The current version compiles (and has been tested) with stable Rust (v1.30) on Windows (both MSVC and GNU toolchains), MacOS and Linux.
+The current version compiles (and has been tested) with stable Rust (v1.32) on Windows (both MSVC and GNU toolchains), MacOS and Linux.
 
 ~~~
 > git clone --recursive https://github.com/code-disaster/sokol-rs
@@ -29,9 +29,9 @@ The `sokol-samples` folder contains some examples ported from [sokol-samples/sap
 
 ### The __SApp__ program loop
 
-In native `sokol_app`, you implement `sapp_main()` and pass some (global) function pointers to call for setup, updates and cleanup. The `main()` entry point is implemented by the library itself.
+In C `sokol_app`, when compiled with `SOKOL_NO_ENTRY`, you call `sapp_run()`, passing callback function pointers for setup, frame updates, and cleanup.
 
-In the Rust version, you are supposed to call `sapp_main()` yourself. This hands over control to the native library, which then will operate as usual. Though, the native callbacks are implemented by sokol-rs. They are forwarded to your application via the `SApp` trait. User applications (need to) implement this trait to power the application loop.
+In the Rust version, you call `sokol::app::sapp_run()`. This hands over control to the C library, which then will operate as usual. Though, the C callbacks are implemented by sokol-rs. They are forwarded to your application via the `SApp` trait. User applications (need to) implement this trait to power the application loop.
 
 Check the [clear-sapp](https://github.com/code-disaster/sokol-rs/blob/master/sokol-samples/clear-sapp/src/main.rs) sample for a typical/minimal implementation.
 
