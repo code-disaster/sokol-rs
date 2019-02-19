@@ -631,7 +631,7 @@ impl SApp for MRT {
 
         let mvp: [[f32; 4]; 4] = (view_proj * model).into();
 
-        sg_begin_pass(&self.offscreen_pass, &self.offscreen_pass_action);
+        sg_begin_pass(self.offscreen_pass, &self.offscreen_pass_action);
         sg_apply_pipeline(self.offscreen_pipeline);
         sg_apply_bindings(&self.offscreen_bindings);
         sg_apply_uniforms(SgShaderStage::Vertex, 0, &mvp, 64);
