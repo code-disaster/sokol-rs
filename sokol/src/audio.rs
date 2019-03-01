@@ -6,6 +6,7 @@
 pub mod ffi {
     use std::os::raw::c_int;
     use std::os::raw::c_void;
+    use std::ptr::null;
 
     #[repr(C)]
     #[derive(Debug)]
@@ -15,20 +16,9 @@ pub mod ffi {
         buffer_frames: c_int,
         packet_frames: c_int,
         num_packets: c_int,
-        stream_cb: Option<unsafe extern fn(*mut f32, c_int, c_int)>,
-    }
-
-    impl SAudioDesc {
-        pub fn make(desc: &super::SAudioDesc) -> SAudioDesc {
-            SAudioDesc {
-                sample_rate: desc.sample_rate,
-                num_channels: desc.num_channels,
-                buffer_frames: desc.buffer_frames,
-                packet_frames: desc.packet_frames,
-                num_packets: desc.num_packets,
-                stream_cb: if desc.use_stream_cb { Some(stream_cb) } else { None },
-            }
-        }
+        stream_cb: *const c_void,
+        stream_userdata_cb: Option<unsafe extern fn(*mut f32, c_int, c_int, *mut c_void)>,
+        user_data: *mut c_void,
     }
 
     extern {
@@ -40,11 +30,27 @@ pub mod ffi {
         pub fn saudio_channels() -> c_int;
         pub fn saudio_expect() -> c_int;
         pub fn saudio_push(frames: *const f32, num_frames: c_int) -> c_int;
+    }
 
-        pub fn saudio_set_user_ptr(ptr: *mut c_void);
-        pub fn saudio_get_user_ptr() -> *mut c_void;
+    pub fn saudio_make_desc(desc: super::SAudioDesc) -> SAudioDesc {
+        let app_ptr = unsafe {
+            super::super::app::ffi::sapp_get_userdata()
+        };
 
-        fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int);
+        SAudioDesc {
+            sample_rate: desc.sample_rate,
+            num_channels: desc.num_channels,
+            buffer_frames: desc.buffer_frames,
+            packet_frames: desc.packet_frames,
+            num_packets: desc.num_packets,
+            stream_cb: null(),
+            stream_userdata_cb: if desc.use_stream_cb {
+                Some(super::super::app::ffi::stream_userdata_cb)
+            } else {
+                None
+            },
+            user_data: app_ptr,
+        }
     }
 }
 
@@ -58,9 +64,9 @@ pub struct SAudioDesc {
     pub use_stream_cb: bool,
 }
 
-pub fn saudio_setup(desc: &SAudioDesc) {
+pub fn saudio_setup(desc: SAudioDesc) {
     unsafe {
-        ffi::saudio_setup(&ffi::SAudioDesc::make(desc));
+        ffi::saudio_setup(&ffi::saudio_make_desc(desc))
     }
 }
 

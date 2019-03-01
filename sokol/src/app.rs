@@ -11,6 +11,7 @@ pub mod ffi {
     use std::os::raw::c_char;
     use std::os::raw::c_int;
     use std::os::raw::c_void;
+    use std::ptr::null;
     use std::slice::from_raw_parts_mut;
 
     pub const SAPP_MAX_TOUCHPOINTS: usize = 8;
@@ -41,11 +42,19 @@ pub mod ffi {
     #[repr(C)]
     #[derive(Debug)]
     pub struct SAppDesc {
-        init_cb: extern fn(),
-        frame_cb: extern fn(),
-        cleanup_cb: extern fn(),
-        event_cb: extern fn(*const SAppEvent),
-        fail_cb: extern fn(*const c_char),
+        init_cb: *const c_void,
+        frame_cb: *const c_void,
+        cleanup_cb: *const c_void,
+        event_cb: *const c_void,
+        fail_cb: *const c_void,
+
+        user_data: *mut c_void,
+        init_userdata_cb: extern fn(*mut c_void),
+        frame_userdata_cb: extern fn(*mut c_void),
+        cleanup_userdata_cb: extern fn(*mut c_void),
+        event_userdata_cb: extern fn(*const SAppEvent, *mut c_void),
+        fail_userdata_cb: extern fn(*const c_char, *mut c_void),
+
         width: c_int,
         height: c_int,
         sample_count: c_int,
@@ -53,14 +62,15 @@ pub mod ffi {
         high_dpi: bool,
         fullscreen: bool,
         alpha: bool,
-        premultiplied_alpha: bool,
-        preserve_drawing_buffer: bool,
         window_title: *const c_char,
+        user_cursor: bool,
+
         html5_canvas_name: *const c_char,
         html5_canvas_resize: bool,
+        html5_preserve_drawing_buffer: bool,
+        html5_premultiplied_alpha: bool,
         ios_keyboard_resizes_canvas: bool,
         gl_force_gles2: bool,
-        user_cursor: bool,
     }
 
     extern {
@@ -89,28 +99,32 @@ pub mod ffi {
         pub fn sapp_d3d11_get_depth_stencil_view() -> *const c_void;
         pub fn sapp_win32_get_hwnd() -> *const c_void;
 
-        /// Helper function to store a "user pointer", which is a
-        /// pointer to our `SAppImpl` instance.
-        pub fn sapp_set_user_ptr(ptr: *mut c_void);
-
-        /// Helper function to retrieve the "user pointer", which is a
-        /// pointer to our `SAppImpl` instance.
-        pub fn sapp_get_user_ptr() -> *mut c_void;
+        /// Helper function to retrieve the "user_data" pointer, which
+        /// points to our `SAppImpl` instance.
+        pub fn sapp_get_userdata() -> *mut c_void;
     }
 
-    pub fn sapp_make_desc() -> SAppDesc {
-        let app = super::SAppImpl::get();
+    pub fn sapp_make_desc(app: &super::SAppImpl) -> SAppDesc {
+        let app_ptr = app as *const super::SAppImpl;
         let desc = &app.desc;
 
         let window_title = CString::new(&*desc.window_title).unwrap();
         let canvas_name = CString::new(&*desc.html5_canvas_name).unwrap();
 
         SAppDesc {
-            init_cb,
-            frame_cb,
-            cleanup_cb,
-            event_cb,
-            fail_cb,
+            init_cb: null(),
+            frame_cb: null(),
+            cleanup_cb: null(),
+            event_cb: null(),
+            fail_cb: null(),
+
+            user_data: app_ptr as *mut c_void,
+            init_userdata_cb,
+            frame_userdata_cb,
+            cleanup_userdata_cb,
+            event_userdata_cb,
+            fail_userdata_cb,
+
             width: desc.width,
             height: desc.height,
             sample_count: desc.sample_count,
@@ -118,39 +132,40 @@ pub mod ffi {
             high_dpi: desc.high_dpi,
             fullscreen: desc.fullscreen,
             alpha: desc.alpha,
-            premultiplied_alpha: desc.premultiplied_alpha,
-            preserve_drawing_buffer: desc.preserve_drawing_buffer,
             window_title: window_title.into_raw(),
+            user_cursor: desc.user_cursor,
+
             html5_canvas_name: canvas_name.into_raw(),
             html5_canvas_resize: desc.html5_canvas_resize,
+            html5_preserve_drawing_buffer: desc.html5_preserve_drawing_buffer,
+            html5_premultiplied_alpha: desc.html5_premultiplied_alpha,
             ios_keyboard_resizes_canvas: desc.ios_keyboard_resizes_canvas,
             gl_force_gles2: desc.gl_force_gles2,
-            user_cursor: desc.user_cursor,
         }
     }
 
     #[no_mangle]
-    pub extern fn init_cb() {
-        super::SAppImpl::get().init_cb();
+    pub extern fn init_userdata_cb(user_data: *mut c_void) {
+        super::SAppImpl::get(user_data).init_cb();
     }
 
     #[no_mangle]
-    pub extern fn frame_cb() {
-        super::SAppImpl::get().frame_cb();
+    pub extern fn frame_userdata_cb(user_data: *mut c_void) {
+        super::SAppImpl::get(user_data).frame_cb();
     }
 
     #[no_mangle]
-    pub extern fn cleanup_cb() {
-        super::SAppImpl::get().cleanup_cb();
+    pub extern fn cleanup_userdata_cb(user_data: *mut c_void) {
+        super::SAppImpl::get(user_data).cleanup_cb();
     }
 
     #[no_mangle]
-    pub extern fn event_cb(event: *const SAppEvent) {
+    pub extern fn event_userdata_cb(event: *const SAppEvent, user_data: *mut c_void) {
         let e = *unsafe {
             &*event
         };
 
-        super::SAppImpl::get().event_cb(super::SAppEvent {
+        super::SAppImpl::get(user_data).event_cb(super::SAppEvent {
             event_type: e.event_type,
             frame_count: e.frame_count,
             key_code: e.key_code,
@@ -171,22 +186,22 @@ pub mod ffi {
     }
 
     #[no_mangle]
-    pub extern fn fail_cb(message: *const c_char) {
+    pub extern fn fail_userdata_cb(message: *const c_char, user_data: *mut c_void) {
         let msg = unsafe {
             CStr::from_ptr(message)
         };
 
-        super::SAppImpl::get().fail_cb(msg.to_str().unwrap());
+        super::SAppImpl::get(user_data).fail_cb(msg.to_str().unwrap());
     }
 
     #[no_mangle]
-    pub extern fn stream_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int) {
+    pub extern fn stream_userdata_cb(buffer: *mut f32, num_frames: c_int, num_channels: c_int, user_data: *mut c_void) {
         let arr = unsafe {
             let len = num_frames * num_channels;
             from_raw_parts_mut(buffer, len as usize)
         };
 
-        super::SAppImpl::get().stream_cb(arr, num_frames, num_channels);
+        super::SAppImpl::get(user_data).stream_cb(arr, num_frames, num_channels);
     }
 }
 
@@ -398,14 +413,15 @@ pub struct SAppDesc {
     pub high_dpi: bool,
     pub fullscreen: bool,
     pub alpha: bool,
-    pub premultiplied_alpha: bool,
-    pub preserve_drawing_buffer: bool,
     pub window_title: String,
+    pub user_cursor: bool,
+
     pub html5_canvas_name: String,
     pub html5_canvas_resize: bool,
+    pub html5_preserve_drawing_buffer: bool,
+    pub html5_premultiplied_alpha: bool,
     pub ios_keyboard_resizes_canvas: bool,
     pub gl_force_gles2: bool,
-    pub user_cursor: bool,
 }
 
 pub trait SApp {
@@ -440,7 +456,7 @@ pub trait SApp {
     }
 }
 
-struct SAppImpl {
+pub struct SAppImpl {
     callbacks: Box<SApp>,
     desc: SAppDesc,
 }
@@ -477,9 +493,9 @@ impl SAppImpl {
         self.callbacks.saudio_stream(buffer, num_frames, num_channels);
     }
 
-    pub fn get() -> &'static mut SAppImpl {
+    pub fn get(user_data: *mut c_void) -> &'static mut SAppImpl {
         unsafe {
-            let app_ptr = ffi::sapp_get_user_ptr() as *mut SAppImpl;
+            let app_ptr = user_data as *mut SAppImpl;
             &mut *app_ptr
         }
     }
@@ -489,15 +505,8 @@ pub fn sapp_run<S: SApp + 'static>(callbacks: S,
                                    desc: SAppDesc) -> i32 {
     let app = SAppImpl::new(callbacks, desc);
 
-    {
-        let app_ptr = &app as *const SAppImpl;
-        unsafe {
-            ffi::sapp_set_user_ptr(app_ptr as *mut c_void);
-        }
-    }
-
     unsafe {
-        ffi::sapp_run(&ffi::sapp_make_desc())
+        ffi::sapp_run(&ffi::sapp_make_desc(&app))
     }
 }
 

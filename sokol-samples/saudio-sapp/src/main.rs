@@ -3,35 +3,10 @@ extern crate sokol_stb;
 
 use std::env;
 
-use sokol::app::SApp;
-use sokol::app::sapp_height;
-use sokol::app::sapp_run;
-use sokol::app::sapp_width;
-use sokol::app::SAppDesc;
-use sokol::app::SAppEvent;
-use sokol::app::SAppEventType;
-use sokol::audio::saudio_channels;
-use sokol::audio::saudio_expect;
-use sokol::audio::saudio_push;
-use sokol::audio::saudio_setup;
-use sokol::audio::saudio_shutdown;
-use sokol::audio::SAudioDesc;
-use sokol::gfx::sg_api;
-use sokol::gfx::sg_begin_default_pass;
-use sokol::gfx::sg_commit;
-use sokol::gfx::sg_end_pass;
-use sokol::gfx::sg_setup;
-use sokol::gfx::sg_shutdown;
-use sokol::gfx::SgAction;
-use sokol::gfx::SgColorAttachmentAction;
-use sokol::gfx::SgDesc;
-use sokol::gfx::SgPassAction;
-use sokol_stb::vorbis::saudio_vorbis_close;
-use sokol_stb::vorbis::saudio_vorbis_decode;
-use sokol_stb::vorbis::saudio_vorbis_end_of_stream;
-use sokol_stb::vorbis::saudio_vorbis_open;
-use sokol_stb::vorbis::saudio_vorbis_rewind;
-use sokol_stb::vorbis::SAudioVorbis;
+use sokol::app::*;
+use sokol::audio::*;
+use sokol::gfx::*;
+use sokol_stb::vorbis::*;
 
 const NUM_SAMPLES: usize = 44800 * 2;
 
@@ -54,7 +29,7 @@ impl SApp for SAudio {
             };
         }
 
-        saudio_setup(&SAudioDesc {
+        saudio_setup(SAudioDesc {
             sample_rate: 44800,
             num_channels: 2,
             use_stream_cb: !self.audio_stream.is_some(),
