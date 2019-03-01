@@ -1103,7 +1103,7 @@ impl Default for SgBlendOp {
 bitflags! {
     #[derive(Default)]
     pub struct SgColorMask: u8 {
-        const None = 0x10;
+        const NONE = 0x10;
         const R = 0x01;
         const G = 0x02;
         const B = 0x04;

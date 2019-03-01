@@ -353,10 +353,10 @@ pub enum SAppMouseButton {
 bitflags! {
     #[repr(C)]
     pub struct SAppModifier: u32 {
-        const Shift = 0x01;
-        const Control = 0x02;
-        const Alt = 0x04;
-        const Super = 0x08;
+        const SHIFT = 0x01;
+        const CONTROL = 0x02;
+        const ALT = 0x04;
+        const SUPER = 0x08;
     }
 }
 
