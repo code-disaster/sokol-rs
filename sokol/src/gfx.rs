@@ -106,7 +106,7 @@ mod ffi {
     #[derive(Debug)]
     pub struct SgDesc {
         _start_canary: u32,
-        desc: super::SgDesc,
+        pub desc: super::SgDesc,
         mtl_device: *const c_void,
         mtl_renderpass_descriptor_cb: unsafe extern fn() -> *const c_void,
         mtl_drawable_cb: unsafe extern fn() -> *const c_void,
@@ -148,6 +148,7 @@ mod ffi {
         buffer_type: super::SgBufferType,
         usage: super::SgUsage,
         content: *const c_void,
+        label: *const c_char,
         gl_buffers: [u32; SG_NUM_INFLIGHT_FRAMES],
         mtl_buffers: [*const c_void; SG_NUM_INFLIGHT_FRAMES],
         d3d11_buffer: *const c_void,
@@ -168,6 +169,7 @@ mod ffi {
                 buffer_type: desc.buffer_type,
                 usage: desc.usage,
                 content: ptr as *const c_void,
+                label: null(),
                 gl_buffers: [0, 0],
                 mtl_buffers: [null(), null()],
                 d3d11_buffer: null(),
@@ -273,6 +275,7 @@ mod ffi {
         min_lod: f32,
         max_lod: f32,
         content: SgImageContent,
+        label: *const c_char,
         gl_textures: [u32; SG_NUM_INFLIGHT_FRAMES],
         mtl_textures: [*const c_void; SG_NUM_INFLIGHT_FRAMES],
         d3d11_texture: *const c_void,
@@ -301,6 +304,7 @@ mod ffi {
                 min_lod: desc.min_lod,
                 max_lod: desc.max_lod,
                 content: SgImageContent::make(content),
+                label: null(),
                 gl_textures: [0; SG_NUM_INFLIGHT_FRAMES],
                 mtl_textures: [null(); SG_NUM_INFLIGHT_FRAMES],
                 d3d11_texture: null(),
@@ -384,6 +388,7 @@ mod ffi {
         _start_canary: u32,
         vs: SgShaderStageDesc,
         fs: SgShaderStageDesc,
+        label: *const c_char,
         _end_canary: u32,
     }
 
@@ -417,6 +422,7 @@ mod ffi {
                     entry: from_str(desc.fs.entry),
                     ..Default::default()
                 },
+                label: null(),
                 _end_canary: 0,
             };
 
@@ -541,6 +547,7 @@ mod ffi {
         depth_stencil: super::SgDepthStencilState,
         blend: SgBlendState,
         rasterizer: super::SgRasterizerState,
+        label: *const c_char,
         _end_canary: u32,
     }
 
@@ -570,6 +577,7 @@ mod ffi {
                     blend_color: blend.blend_color,
                 },
                 rasterizer: (*desc).rasterizer,
+                label: null(),
                 _end_canary: 0,
             };
 
@@ -614,6 +622,7 @@ mod ffi {
         _start_canary: u32,
         color_attachments: [super::SgAttachmentDesc; SG_MAX_COLOR_ATTACHMENTS],
         depth_stencil_attachment: super::SgAttachmentDesc,
+        label: *const c_char,
         _end_canary: u32,
     }
 
@@ -623,6 +632,7 @@ mod ffi {
                 _start_canary: 0,
                 color_attachments: Default::default(),
                 depth_stencil_attachment: desc.depth_stencil_attachment,
+                label: null(),
                 _end_canary: 0,
             };
 
@@ -638,6 +648,7 @@ mod ffi {
         pub fn sg_setup(desc: *const SgDesc);
         pub fn sg_shutdown();
         pub fn sg_isvalid() -> bool;
+        pub fn sg_query_desc() -> SgDesc;
         pub fn sg_query_feature(feature: super::SgFeature) -> bool;
         pub fn sg_reset_state_cache();
 
@@ -1408,6 +1419,13 @@ pub fn sg_shutdown() {
 pub fn sg_isvalid() -> bool {
     unsafe {
         ffi::sg_isvalid()
+    }
+}
+
+pub fn sg_query_desc() -> SgDesc {
+    unsafe {
+        let desc = ffi::sg_query_desc();
+        desc.desc
     }
 }
 
