@@ -59,7 +59,7 @@ C library | Rust module | status | notes
 [sokol_app.h](https://github.com/floooh/sokol/blob/master/sokol_app.h) | `sokol::app` | done |
 [sokol_args.h](https://github.com/floooh/sokol/blob/master/sokol_args.h) | n/a | n/a | low priority - there are many cmdline parsers for Rust already
 [sokol_audio.h](https://github.com/floooh/sokol/blob/master/sokol_audio.h) | `sokol::audio` | done | callback API via trait in `sokol::app`
-[sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_gfx.h) | `sokol::gfx` | mostly done | missing: separate resource management, render contexts, user-provided buffers
+[sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_gfx.h) | `sokol::gfx` | mostly done | missing: separate resource management, render contexts, user-provided buffers<br><br>not implemented: trace hooks, `sg_query_*_info()` functions  
 [sokol_time.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | `sokol::time` | done |
 
 ### Remarks
