@@ -81,6 +81,23 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
     //
     let api = sg_api();
     let shader = sg_make_shader(&SgShaderDesc {
+        attrs: vec![
+            SgShaderAttrDesc {
+                name: "position",
+                sem_name: "TEXCOORD",
+                sem_index: 0,
+            },
+            SgShaderAttrDesc {
+                name: "texcoord0",
+                sem_name: "TEXCOORD",
+                sem_index: 1,
+            },
+            SgShaderAttrDesc {
+                name: "color0",
+                sem_name: "TEXCOORD",
+                sem_index: 2,
+            },
+        ],
         vs: SgShaderStageDesc {
             source: match api {
                 SgApi::OpenGL33 => Some(include_str!("shader/imgui.vert.glsl")),
@@ -141,23 +158,14 @@ pub fn sg_imgui_setup(max_vertices: usize) -> SgImGui {
             ],
             attrs: vec![
                 SgVertexAttrDesc {
-                    name: "position",
-                    sem_name: "TEXCOORD",
-                    sem_index: 0,
                     format: SgVertexFormat::Float2,
                     ..Default::default()
                 },
                 SgVertexAttrDesc {
-                    name: "texcoord0",
-                    sem_name: "TEXCOORD",
-                    sem_index: 1,
                     format: SgVertexFormat::Float2,
                     ..Default::default()
                 },
                 SgVertexAttrDesc {
-                    name: "color0",
-                    sem_name: "TEXCOORD",
-                    sem_index: 2,
                     format: SgVertexFormat::UByte4N,
                     ..Default::default()
                 },

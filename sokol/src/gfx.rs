@@ -315,6 +315,24 @@ mod ffi {
 
     #[repr(C)]
     #[derive(Copy, Clone, Debug)]
+    struct SgShaderAttrDesc {
+        name: *const c_char,
+        sem_name: *const c_char,
+        sem_index: c_int,
+    }
+
+    impl Default for SgShaderAttrDesc {
+        fn default() -> Self {
+            SgShaderAttrDesc {
+                name: null(),
+                sem_name: null(),
+                sem_index: 0,
+            }
+        }
+    }
+
+    #[repr(C)]
+    #[derive(Copy, Clone, Debug)]
     struct SgShaderUniformDesc {
         name: *const c_char,
         uniform_type: super::SgUniformType,
@@ -386,6 +404,7 @@ mod ffi {
     #[derive(Debug)]
     pub struct SgShaderDesc {
         _start_canary: u32,
+        attrs: [SgShaderAttrDesc; SG_MAX_VERTEX_ATTRIBUTES],
         vs: SgShaderStageDesc,
         fs: SgShaderStageDesc,
         label: *const c_char,
@@ -408,6 +427,7 @@ mod ffi {
 
             let mut shd = SgShaderDesc {
                 _start_canary: 0,
+                attrs: Default::default(),
                 vs: SgShaderStageDesc {
                     source: from_str(desc.vs.source),
                     byte_code: vs_bytes,
@@ -426,6 +446,8 @@ mod ffi {
                 _end_canary: 0,
             };
 
+            Self::collect_attrs(&mut shd, &desc.attrs);
+
             Self::collect_uniform_blocks(&mut shd.vs, &desc.vs.uniform_blocks);
             Self::collect_images(&mut shd.vs, &desc.vs.images);
 
@@ -442,6 +464,20 @@ mod ffi {
                 (bytes.as_ptr(), bytes_len)
             } else {
                 (null(), 0)
+            }
+        }
+
+        fn collect_attrs(desc: &mut SgShaderDesc,
+                         src: &[super::SgShaderAttrDesc]) {
+            for (idx, attr) in src.iter().enumerate() {
+                let name = CString::new(attr.name).unwrap();
+                let sem_name = CString::new(attr.sem_name).unwrap();
+
+                desc.attrs[idx] = SgShaderAttrDesc {
+                    name: name.into_raw(),
+                    sem_name: sem_name.into_raw(),
+                    sem_index: attr.sem_index,
+                };
             }
         }
 
@@ -491,9 +527,6 @@ mod ffi {
     #[repr(C)]
     #[derive(Debug)]
     pub struct SgVertexAttrDesc {
-        name: *const c_char,
-        sem_name: *const c_char,
-        sem_index: c_int,
         buffer_index: c_int,
         offset: c_int,
         format: super::SgVertexFormat,
@@ -502,9 +535,6 @@ mod ffi {
     impl Default for SgVertexAttrDesc {
         fn default() -> Self {
             SgVertexAttrDesc {
-                name: null(),
-                sem_name: null(),
-                sem_index: 0,
                 buffer_index: 0,
                 offset: 0,
                 format: super::SgVertexFormat::_Invalid,
@@ -601,13 +631,7 @@ mod ffi {
         fn collect_layout_attrs(desc: &mut SgLayoutDesc,
                                 src: &[super::SgVertexAttrDesc]) {
             for (idx, attr) in src.iter().enumerate() {
-                let name = CString::new(attr.name).unwrap();
-                let sem_name = CString::new(attr.sem_name).unwrap();
-
                 desc.attrs[idx] = SgVertexAttrDesc {
-                    name: name.into_raw(),
-                    sem_name: sem_name.into_raw(),
-                    sem_index: attr.sem_index,
                     buffer_index: attr.buffer_index,
                     offset: attr.offset,
                     format: attr.format,
@@ -1226,6 +1250,13 @@ pub struct SgImageDesc {
 pub const SG_IMAGE_CONTENT_NONE: Option<&[(*const u8, i32)]> = None;
 
 #[derive(Default, Debug)]
+pub struct SgShaderAttrDesc<'a> {
+    pub name: &'a str,
+    pub sem_name: &'a str,
+    pub sem_index: i32,
+}
+
+#[derive(Default, Debug)]
 pub struct SgShaderUniformDesc<'a> {
     pub name: &'a str,
     pub uniform_type: SgUniformType,
@@ -1255,6 +1286,7 @@ pub struct SgShaderStageDesc<'a> {
 
 #[derive(Debug)]
 pub struct SgShaderDesc<'a> {
+    pub attrs: Vec<SgShaderAttrDesc<'a>>,
     pub vs: SgShaderStageDesc<'a>,
     pub fs: SgShaderStageDesc<'a>,
 }
@@ -1317,25 +1349,22 @@ pub struct SgRasterizerState {
 }
 
 #[derive(Default, Debug)]
-pub struct SgVertexAttrDesc<'a> {
-    pub name: &'a str,
-    pub sem_name: &'a str,
-    pub sem_index: i32,
+pub struct SgVertexAttrDesc {
     pub buffer_index: i32,
     pub offset: i32,
     pub format: SgVertexFormat,
 }
 
 #[derive(Default, Debug)]
-pub struct SgLayoutDesc<'a> {
+pub struct SgLayoutDesc {
     pub buffers: Vec<SgBufferLayoutDesc>,
-    pub attrs: Vec<SgVertexAttrDesc<'a>>,
+    pub attrs: Vec<SgVertexAttrDesc>,
 }
 
 #[derive(Default, Debug)]
-pub struct SgPipelineDesc<'a> {
+pub struct SgPipelineDesc {
     pub shader: SgShader,
-    pub layout: SgLayoutDesc<'a>,
+    pub layout: SgLayoutDesc,
     pub primitive_type: SgPrimitiveType,
     pub index_type: SgIndexType,
     pub depth_stencil: SgDepthStencilState,

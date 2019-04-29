@@ -147,6 +147,18 @@ impl SApp for Cube {
 
         let shd = sg_make_shader(
             &SgShaderDesc {
+                attrs: vec![
+                    SgShaderAttrDesc {
+                        name: "position",
+                        sem_name: "POS",
+                        ..Default::default()
+                    },
+                    SgShaderAttrDesc {
+                        name: "color0",
+                        sem_name: "COLOR",
+                        ..Default::default()
+                    },
+                ],
                 vs: SgShaderStageDesc {
                     source: Some(vs_src),
                     uniform_blocks: vec!(
@@ -181,14 +193,10 @@ impl SApp for Cube {
                     ),
                     attrs: vec!(
                         SgVertexAttrDesc {
-                            name: "position",
-                            sem_name: "POS",
                             format: SgVertexFormat::Float3,
                             ..Default::default()
                         },
                         SgVertexAttrDesc {
-                            name: "color0",
-                            sem_name: "COLOR",
                             format: SgVertexFormat::Float4,
                             ..Default::default()
                         },

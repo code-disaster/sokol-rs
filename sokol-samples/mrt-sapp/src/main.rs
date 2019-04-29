@@ -235,6 +235,18 @@ impl SApp for MRT {
 
         let cube_shd = sg_make_shader(
             &SgShaderDesc {
+                attrs: vec![
+                    SgShaderAttrDesc {
+                        name: "position",
+                        sem_name: "POSITION",
+                        ..Default::default()
+                    },
+                    SgShaderAttrDesc {
+                        name: "bright0",
+                        sem_name: "BRIGHT",
+                        ..Default::default()
+                    },
+                ],
                 vs: SgShaderStageDesc {
                     source: Some(cube_vs_src),
                     uniform_blocks: vec!(
@@ -269,15 +281,11 @@ impl SApp for MRT {
                     ),
                     attrs: vec!(
                         SgVertexAttrDesc {
-                            name: "position",
-                            sem_name: "POSITION",
                             format: SgVertexFormat::Float3,
                             offset: 0,
                             ..Default::default()
                         },
                         SgVertexAttrDesc {
-                            name: "bright0",
-                            sem_name: "BRIGHT",
                             format: SgVertexFormat::Float,
                             offset: 12,
                             ..Default::default()
@@ -438,6 +446,13 @@ impl SApp for MRT {
 
         let fsq_shd = sg_make_shader(
             &SgShaderDesc {
+                attrs: vec![
+                    SgShaderAttrDesc {
+                        name: "pos",
+                        sem_name: "POSITION",
+                        ..Default::default()
+                    },
+                ],
                 vs: SgShaderStageDesc {
                     source: Some(fsq_vs_src),
                     uniform_blocks: vec!(
@@ -480,8 +495,6 @@ impl SApp for MRT {
                 layout: SgLayoutDesc {
                     attrs: vec![
                         SgVertexAttrDesc {
-                            name: "pos",
-                            sem_name: "POSITION",
                             format: SgVertexFormat::Float2,
                             ..Default::default()
                         },
@@ -573,8 +586,6 @@ impl SApp for MRT {
             layout: SgLayoutDesc {
                 attrs: vec![
                     SgVertexAttrDesc {
-                        name: "pos",
-                        sem_name: "POSITION",
                         format: SgVertexFormat::Float2,
                         ..Default::default()
                     },
@@ -583,6 +594,13 @@ impl SApp for MRT {
             },
             primitive_type: SgPrimitiveType::TriangleStrip,
             shader: sg_make_shader(&SgShaderDesc {
+                attrs: vec![
+                    SgShaderAttrDesc {
+                        name: "pos",
+                        sem_name: "POSITION",
+                        ..Default::default()
+                    },
+                ],
                 vs: SgShaderStageDesc {
                     source: Some(dbg_vs_src),
                     ..Default::default()
