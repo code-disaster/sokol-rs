@@ -233,6 +233,9 @@ pub fn sg_imgui_draw(ui: &SgImGui) {
         w: 0.0,
     };
 
+    sg_apply_pipeline(ui.pipeline);
+    sg_apply_uniforms(SgShaderStage::Vertex, 0, &uniforms, 16);
+
     unsafe {
         for cmd_list in draw_data.cmd_lists() {
             let cl = &**cmd_list;
@@ -259,10 +262,7 @@ pub fn sg_imgui_draw(ui: &SgImGui) {
                 fs_images: vec![ui.bindings.fs_images[0]],
             };
 
-            sg_apply_pipeline(ui.pipeline);
             sg_apply_bindings(&bindings);
-
-            sg_apply_uniforms(SgShaderStage::Vertex, 0, &uniforms, 16);
 
             let mut base_element: i32 = 0;
             for cmd in cl.cmd_buffer.as_slice() {
