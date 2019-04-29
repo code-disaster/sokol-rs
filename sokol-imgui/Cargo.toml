@@ -1,6 +1,6 @@
 [package]
 name = "sokol-imgui"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
 description = "A backend for use with sokol-rs and imgui-rs."
 repository = "https://github.com/code-disaster/sokol-rs"

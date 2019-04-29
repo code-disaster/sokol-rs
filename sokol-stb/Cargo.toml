@@ -1,6 +1,6 @@
 [package]
 name = "sokol-stb"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
 description = "A collection of tools for using the stb libraries with sokol-rs."
 repository = "https://github.com/code-disaster/sokol-rs"
