@@ -10,10 +10,9 @@ its content each frame with a solid color.
 
 ```rust
 # extern crate sokol;
-use sokol::{
-    app::*,
-    gfx::*,
-};
+
+use sokol::app::*;
+use sokol::gfx::*;
 
 struct ExampleApp {
     pass_action: SgPassAction,
