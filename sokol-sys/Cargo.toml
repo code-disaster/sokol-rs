@@ -1,8 +1,8 @@
 [package]
 name = "sokol-sys"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
-description = "Native bindings to the sokol header-only, cross-platform C libraries."
+description = "Low-level compilation units for the sokol header-only, cross-platform C libraries."
 repository = "https://github.com/code-disaster/sokol-rs"
 readme = "README.md"
 license = "Zlib"

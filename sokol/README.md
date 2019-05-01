@@ -1,4 +1,4 @@
-# sokol-rs
+# sokol
 
 [![Crates.io][ci]][cl] [![Docs.rs][di]][dl] ![zlib][li]
 

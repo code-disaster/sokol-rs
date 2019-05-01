@@ -1,11 +1,11 @@
 [package]
 name = "sokol-imgui"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
-description = "A backend for use with sokol-rs and imgui-rs."
+description = "Dear ImGui renderer/event-handler using the sokol_imgui.h header-only library."
 repository = "https://github.com/code-disaster/sokol-rs"
 readme = "README.md"
 license = "Zlib"
 
 [dependencies]
-sokol = { path = "../sokol" }
+sokol = { version = "0.4.0", path = "../sokol" }

@@ -1,12 +1,12 @@
 [package]
 name = "sokol"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
-description = "Native bindings to the sokol header-only, cross-platform C libraries."
+description = "Rust bindings to the sokol header-only, cross-platform C libraries."
 repository = "https://github.com/code-disaster/sokol-rs"
 readme = "README.md"
 license = "Zlib"
 
 [dependencies]
-sokol-sys = { path = "../sokol-sys" }
+sokol-sys = { version = "0.4.0", path = "../sokol-sys" }
 bitflags = "1.0"
