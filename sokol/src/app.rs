@@ -39,6 +39,29 @@ pub mod ffi {
         framebuffer_height: c_int,
     }
 
+    impl SAppEvent {
+        pub fn translate(event: &super::SAppEvent) -> Self {
+            SAppEvent {
+                event_type: event.event_type,
+                frame_count: event.frame_count,
+                key_code: event.key_code,
+                char_code: event.char_code,
+                modifiers: event.modifiers,
+                mouse_button: event.mouse_button,
+                mouse_x: event.mouse_x,
+                mouse_y: event.mouse_y,
+                scroll_x: event.scroll_x,
+                scroll_y: event.scroll_y,
+                num_touches: event.num_touches,
+                touches: event.touches,
+                window_width: event.window_width,
+                window_height: event.window_height,
+                framebuffer_width: event.framebuffer_width,
+                framebuffer_height: event.framebuffer_height,
+            }
+        }
+    }
+
     #[repr(C)]
     #[derive(Debug)]
     pub struct SAppDesc {

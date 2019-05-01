@@ -9,4 +9,3 @@ license = "Zlib"
 
 [dependencies]
 sokol = { path = "../sokol" }
-imgui-sys = { git = "https://github.com/code-disaster/imgui-rs", branch = "patch.x86_64-pc-windows-gnu" }

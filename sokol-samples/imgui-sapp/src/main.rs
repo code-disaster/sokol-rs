@@ -1,22 +1,13 @@
-extern crate imgui_sys;
 extern crate sokol;
 extern crate sokol_imgui;
-
-use imgui_sys::igSetNextWindowPos;
-use imgui_sys::igShowDemoWindow;
-use imgui_sys::ImGuiCond;
-use imgui_sys::ImVec2;
 
 use sokol::app::*;
 use sokol::gfx::*;
 use sokol::time::*;
-use sokol_imgui::app::*;
-use sokol_imgui::gfx::*;
+use sokol_imgui::imgui::*;
 
 struct ImGuiDemo {
     pass_action: SgPassAction,
-    ui: SAppImGui,
-    ui_renderer: SgImGui,
     frame_time: u64,
 }
 
@@ -28,46 +19,46 @@ impl SApp for ImGuiDemo {
             ..Default::default()
         });
 
-        self.ui = sapp_imgui_setup();
-        self.ui_renderer = sg_imgui_setup(1 << 16);
+        simgui_setup(SImGuiDesc {
+            ..Default::default()
+        });
     }
 
     fn sapp_frame(&mut self) {
         let laptime = stm_laptime(&mut self.frame_time);
 
-        sapp_imgui_new_frame(&mut self.ui, stm_sec(laptime) as f32);
+        simgui_new_frame(sapp_width(), sapp_height(), stm_sec(laptime));
         self.show_demo_window();
 
         sg_begin_default_pass(&self.pass_action, sapp_width(), sapp_height());
-        sg_imgui_draw(&self.ui_renderer);
+        simgui_render();
         sg_end_pass();
         sg_commit();
     }
 
     fn sapp_cleanup(&mut self) {
-        sg_imgui_shutdown(&self.ui_renderer);
+        simgui_shutdown();
         sg_shutdown();
     }
 
     fn sapp_event(&mut self, event: SAppEvent) {
-        let (_processed_mouse, _processed_keyboard) = sapp_imgui_event(&mut self.ui, &event);
-        // here, application would use returned tuple to figure out
+        let _handled = simgui_handle_event(&event);
+        // here, application would use return value to figure out
         // which events to continue processing
     }
 }
 
 impl ImGuiDemo {
     fn show_demo_window(&mut self) {
-        unsafe {
+        /*unsafe {
             igSetNextWindowPos(
                 ImVec2 { x: 60.0, y: 20.0 },
                 ImGuiCond::FirstUseEver,
                 ImVec2 { x: 0.0, y: 0.0 },
             );
-
-            let mut show = true;
-            igShowDemoWindow(&mut show);
-        }
+        }*/
+        let mut show = true;
+        simgui_show_demo_window(&mut show);
     }
 }
 
@@ -82,8 +73,6 @@ fn main() {
             ),
             ..Default::default()
         },
-        ui: Default::default(),
-        ui_renderer: Default::default(),
         frame_time: 0,
     };
 

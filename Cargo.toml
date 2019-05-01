@@ -2,6 +2,7 @@
 
 members = [
     "sokol",
+    "sokol-sys",
     "sokol-imgui",
     "sokol-stb",
     "sokol-samples/clear-sapp",
