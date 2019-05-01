@@ -8,4 +8,5 @@ This crate provides a renderer backend and user input handler to
 
 extern crate sokol;
 
+pub mod gfx;
 pub mod imgui;

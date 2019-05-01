@@ -4,11 +4,13 @@ extern crate sokol_imgui;
 use sokol::app::*;
 use sokol::gfx::*;
 use sokol::time::*;
+use sokol_imgui::gfx::*;
 use sokol_imgui::imgui::*;
 
 struct ImGuiDemo {
     pass_action: SgPassAction,
     frame_time: u64,
+    sg_imgui_ctx: SgImGui,
 }
 
 impl SApp for ImGuiDemo {
@@ -22,6 +24,8 @@ impl SApp for ImGuiDemo {
         simgui_setup(SImGuiDesc {
             ..Default::default()
         });
+
+        sg_imgui_init();
     }
 
     fn sapp_frame(&mut self) {
@@ -29,6 +33,7 @@ impl SApp for ImGuiDemo {
 
         simgui_new_frame(sapp_width(), sapp_height(), stm_sec(laptime));
         self.show_demo_window();
+        sg_imgui_draw(&mut self.sg_imgui_ctx);
 
         sg_begin_default_pass(&self.pass_action, sapp_width(), sapp_height());
         simgui_render();
@@ -37,6 +42,7 @@ impl SApp for ImGuiDemo {
     }
 
     fn sapp_cleanup(&mut self) {
+        sg_imgui_discard();
         simgui_shutdown();
         sg_shutdown();
     }
@@ -74,6 +80,14 @@ fn main() {
             ..Default::default()
         },
         frame_time: 0,
+        sg_imgui_ctx: SgImGui {
+            buffers: true,
+            images: true,
+            shaders: true,
+            pipelines: true,
+            passes: true,
+            capture: true,
+        },
     };
 
     let title = format!("imgui-sapp.rs ({:?})", sg_api());

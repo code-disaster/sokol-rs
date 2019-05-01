@@ -155,6 +155,12 @@ fn make_sokol_imgui() {
     //
     select_sokol_gfx_renderer(&mut build, is_msvc, false);
 
+    //
+    // silence some warnings
+    //
+    build
+        .flag_if_supported("-Wno-unused-parameter");
+
     build
         .cpp(true)
         .compile("sokol-sys-imgui");
