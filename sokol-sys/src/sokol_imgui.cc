@@ -1,6 +1,7 @@
 #include <sokol_app.h>
 #include <sokol_gfx.h>
 
+#define IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 #include <imgui.h>
 
 #define SOKOL_IMGUI_IMPL

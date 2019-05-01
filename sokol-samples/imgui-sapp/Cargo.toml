@@ -6,4 +6,3 @@ authors = ["Daniel Ludwig <codi@code-disaster.com>"]
 [dependencies]
 sokol = { path = "../../sokol" }
 sokol-imgui = { path = "../../sokol-imgui" }
-imgui-sys = { git = "https://github.com/code-disaster/imgui-rs", branch = "patch.x86_64-pc-windows-gnu" }
