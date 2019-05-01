@@ -64,6 +64,7 @@ fn main() {
 
 #[macro_use]
 extern crate bitflags;
+extern crate sokol_sys as sys;
 
 pub mod app;
 pub mod audio;

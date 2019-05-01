@@ -18,15 +18,21 @@ fn main() {
     };
 
     //
-    // MacOS: need ARC, so compile lib.m with -fobjc-arc
+    // include paths
+    //
+    build
+        .include("external/sokol");
+
+    //
+    // MacOS: need ARC, so compile sokol.m with -fobjc-arc
     //
     if cfg!(target_os = "macos") {
         build
             .flag("-fobjc-arc")
-            .file("src/lib.m");
+            .file("src/sokol.m");
     } else {
         build
-            .file("src/lib.c");
+            .file("src/sokol.c");
     }
 
     //
@@ -77,8 +83,7 @@ fn main() {
     }
 
     build
-        .flag("-DSOKOL_NO_DEPRECATED")
-        .compile("sokol");
+        .compile("sokol-sys");
 
     //
     // MacOS: frameworks

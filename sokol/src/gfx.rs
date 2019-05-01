@@ -6,6 +6,8 @@
 use std::fmt;
 use std::os::raw::c_void;
 
+pub use sys::gfx::{sg_api, SgApi};
+
 mod ffi {
     use std::ffi::CString;
     use std::fmt;
@@ -769,13 +771,6 @@ pub struct SgContext {
     enums
 */
 
-#[derive(Debug, PartialEq)]
-pub enum SgApi {
-    Direct3D11,
-    Metal,
-    OpenGL33,
-}
-
 #[repr(C)]
 #[derive(Debug)]
 pub enum SgFeature {
@@ -1417,21 +1412,6 @@ pub struct SgPassDesc {
 /*
     functions
 */
-
-#[cfg(gfx = "d3d11")]
-pub fn sg_api() -> SgApi {
-    SgApi::Direct3D11
-}
-
-#[cfg(gfx = "metal")]
-pub fn sg_api() -> SgApi {
-    SgApi::Metal
-}
-
-#[cfg(gfx = "glcore33")]
-pub fn sg_api() -> SgApi {
-    SgApi::OpenGL33
-}
 
 pub fn sg_setup(desc: &SgDesc) {
     unsafe {

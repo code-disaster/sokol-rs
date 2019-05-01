@@ -1,21 +1,7 @@
 extern crate sokol;
 
-use sokol::app::SApp;
-use sokol::app::sapp_height;
-use sokol::app::sapp_run;
-use sokol::app::sapp_width;
-use sokol::app::SAppDesc;
-use sokol::app::SAppEvent;
-use sokol::gfx::sg_api;
-use sokol::gfx::sg_begin_default_pass;
-use sokol::gfx::sg_commit;
-use sokol::gfx::sg_end_pass;
-use sokol::gfx::sg_setup;
-use sokol::gfx::sg_shutdown;
-use sokol::gfx::SgAction;
-use sokol::gfx::SgColorAttachmentAction;
-use sokol::gfx::SgDesc;
-use sokol::gfx::SgPassAction;
+use sokol::app::*;
+use sokol::gfx::*;
 
 struct Clear {
     pass_action: SgPassAction,
