@@ -1,5 +1,5 @@
 [submodule "sokol/src/sokol"]
-	path = sokol/src/sokol
+	path = sokol-sys/external/sokol
 	url = https://github.com/floooh/sokol.git
 [submodule "sokol-stb/src/stb"]
 	path = sokol-stb/src/stb
