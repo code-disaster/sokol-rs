@@ -2,20 +2,47 @@ extern crate cc;
 
 use std::env;
 
-fn main() {
-    let mut build = cc::Build::new();
-    let tool = build.try_get_compiler();
+use cc::{Build, Tool};
+
+fn build_new() -> (Build, Tool) {
+    let build = Build::new();
+    let tool = build.try_get_compiler().unwrap();
+
+    (build, tool)
+}
+
+fn select_sokol_gfx_renderer(build: &mut Build, is_msvc: bool, is_impl: bool) {
+    //
+    // select sokol_gfx renderer, defaults to:
+    // - Windows: D3D11 with MSVC, GLCORE33 otherwise
+    // - MacOS: Metal
+    // - Linux: GLCORE33
+    //
+    if cfg!(target_os = "windows") && is_msvc {
+        build.flag("-DSOKOL_D3D11");
+    } else if cfg!(target_os = "macos") {
+        build.flag("-DSOKOL_METAL");
+    } else {
+        build.flag("-DSOKOL_GLCORE33");
+    }
+
+    if is_impl {
+        if cfg!(target_os = "windows") && is_msvc {
+            build.flag("-DSOKOL_D3D11_SHADER_COMPILER");
+            println!("cargo:rustc-cfg=gfx=\"d3d11\"");
+        } else if cfg!(target_os = "macos") {
+            println!("cargo:rustc-cfg=gfx=\"metal\"");
+        } else {
+            println!("cargo:rustc-cfg=gfx=\"glcore33\"");
+        }
+    }
+}
+
+fn make_sokol() {
+    let (mut build, tool) = build_new();
 
     let is_debug = env::var("DEBUG").ok().is_some();
-
-    let is_msvc = match &tool {
-        Ok(tool) => {
-            tool.is_like_msvc()
-        }
-        Err(_) => {
-            false
-        }
-    };
+    let is_msvc = tool.is_like_msvc();
 
     //
     // include paths
@@ -36,23 +63,9 @@ fn main() {
     }
 
     //
-    // select sokol_gfx renderer, defaults to:
-    // - Windows: D3D11 with MSVC, GLCORE33 otherwise
-    // - MacOS: Metal
-    // - Linux: GLCORE33
+    // select sokol_gfx renderer
     //
-    if cfg!(target_os = "windows") && is_msvc {
-        build
-            .flag("-DSOKOL_D3D11")
-            .flag("-DSOKOL_D3D11_SHADER_COMPILER");
-        println!("cargo:rustc-cfg=gfx=\"d3d11\"");
-    } else if cfg!(target_os = "macos") {
-        build.flag("-DSOKOL_METAL");
-        println!("cargo:rustc-cfg=gfx=\"metal\"");
-    } else {
-        build.flag("-DSOKOL_GLCORE33");
-        println!("cargo:rustc-cfg=gfx=\"glcore33\"");
-    }
+    select_sokol_gfx_renderer(&mut build, is_msvc, true);
 
     //
     // silence some warnings
@@ -104,4 +117,50 @@ fn main() {
         println!("cargo:rustc-link-lib=dylib=X11");
         println!("cargo:rustc-link-lib=dylib=asound");
     }
+}
+
+fn make_sokol_imgui() {
+    let (mut build, tool) = build_new();
+
+    let is_msvc = tool.is_like_msvc();
+
+    //
+    // include paths
+    //
+    build
+        .include("external/imgui")
+        .include("external/sokol")
+        .include("external/sokol/util");
+
+    //
+    // source files
+    //
+    build.files(&[
+        "src/sokol_imgui.cc",
+        "external/imgui/imgui.cpp",
+        "external/imgui/imgui_demo.cpp",
+        "external/imgui/imgui_draw.cpp",
+        "external/imgui/imgui_widgets.cpp"
+    ]);
+
+    //
+    // oh dear!
+    //
+    if cfg!(target_os = "windows") && !is_msvc {
+        build.file("src/sokol_imgui_patch_mingw.c");
+    }
+
+    //
+    // select sokol_gfx renderer
+    //
+    select_sokol_gfx_renderer(&mut build, is_msvc, false);
+
+    build
+        .cpp(true)
+        .compile("sokol-sys-imgui");
+}
+
+fn main() {
+    make_sokol();
+    make_sokol_imgui();
 }
