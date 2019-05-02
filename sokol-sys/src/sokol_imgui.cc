@@ -14,23 +14,32 @@ extern "C" void simgui_show_demo_window(bool* p_open) {
     ImGui::ShowDemoWindow(p_open);
 }
 
-static sg_imgui_t sg_imgui_ctx;
+typedef struct {
+    sg_imgui_t* content;
+    bool buffers;
+    bool images;
+    bool shaders;
+    bool pipelines;
+    bool passes;
+    bool capture;
+} sg_imgui_wrap_t;
 
-extern "C" void sg_imgui_wrap_init() {
-    sg_imgui_init(&sg_imgui_ctx);
+extern "C" void sg_imgui_wrap_init(sg_imgui_wrap_t* ctx) {
+    ctx->content = (sg_imgui_t*) _sg_imgui_alloc(sizeof(sg_imgui_t));
+    sg_imgui_init(ctx->content);
 }
 
-extern "C" void sg_imgui_wrap_discard() {
-    sg_imgui_discard(&sg_imgui_ctx);
+extern "C" void sg_imgui_wrap_discard(sg_imgui_wrap_t* ctx) {
+    sg_imgui_discard(ctx->content);
+    _sg_imgui_free(ctx->content);
 }
 
-extern "C" void sg_imgui_wrap_draw(bool* ctx) {
-    sg_imgui_ctx.buffers.open = ctx[0];
-    sg_imgui_ctx.images.open = ctx[1];
-    sg_imgui_ctx.shaders.open = ctx[2];
-    sg_imgui_ctx.pipelines.open = ctx[3];
-    sg_imgui_ctx.passes.open = ctx[4];
-    sg_imgui_ctx.capture.open = ctx[5];
-
-    sg_imgui_draw(&sg_imgui_ctx);
+extern "C" void sg_imgui_wrap_draw(sg_imgui_wrap_t* ctx) {
+    ctx->content->buffers.open = ctx->buffers;
+    ctx->content->images.open = ctx->images;
+    ctx->content->shaders.open = ctx->shaders;
+    ctx->content->pipelines.open = ctx->pipelines;
+    ctx->content->passes.open = ctx->passes;
+    ctx->content->capture.open = ctx->capture;
+    sg_imgui_draw(ctx->content);
 }

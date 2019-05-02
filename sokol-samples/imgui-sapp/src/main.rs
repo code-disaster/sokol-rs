@@ -21,11 +21,14 @@ impl SApp for ImGuiDemo {
             ..Default::default()
         });
 
+        sg_imgui_init(&mut self.sg_imgui_ctx);
+        self.sg_imgui_ctx.buffers = true;
+        self.sg_imgui_ctx.shaders = true;
+        self.sg_imgui_ctx.capture = true;
+
         simgui_setup(SImGuiDesc {
             ..Default::default()
         });
-
-        sg_imgui_init();
     }
 
     fn sapp_frame(&mut self) {
@@ -42,8 +45,8 @@ impl SApp for ImGuiDemo {
     }
 
     fn sapp_cleanup(&mut self) {
-        sg_imgui_discard();
         simgui_shutdown();
+        sg_imgui_discard(&mut self.sg_imgui_ctx);
         sg_shutdown();
     }
 
@@ -80,14 +83,7 @@ fn main() {
             ..Default::default()
         },
         frame_time: 0,
-        sg_imgui_ctx: SgImGui {
-            buffers: true,
-            images: true,
-            shaders: true,
-            pipelines: true,
-            passes: true,
-            capture: true,
-        },
+        sg_imgui_ctx: SgImGui::new(),
     };
 
     let title = format!("imgui-sapp.rs ({:?})", sg_api());
