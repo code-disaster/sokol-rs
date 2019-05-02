@@ -6,8 +6,6 @@
 use std::fmt;
 use std::os::raw::c_void;
 
-pub use sys::gfx::{sg_api, SgApi};
-
 mod ffi {
     use std::ffi::CString;
     use std::fmt;
@@ -675,6 +673,7 @@ mod ffi {
         pub fn sg_shutdown();
         pub fn sg_isvalid() -> bool;
         pub fn sg_query_desc() -> SgDesc;
+        pub fn sg_query_backend() -> super::SgBackend;
         pub fn sg_query_feature(feature: super::SgFeature) -> bool;
         pub fn sg_reset_state_cache();
 
@@ -770,6 +769,18 @@ pub struct SgContext {
 /*
     enums
 */
+
+#[repr(C)]
+#[derive(Debug)]
+pub enum SgBackend {
+    GLCORE33,
+    GLES2,
+    GLES3,
+    D3D11,
+    MetalIOS,
+    MetalMacOS,
+    Dummy,
+}
 
 #[repr(C)]
 #[derive(Debug)]
@@ -1435,6 +1446,12 @@ pub fn sg_query_desc() -> SgDesc {
     unsafe {
         let desc = ffi::sg_query_desc();
         desc.desc
+    }
+}
+
+pub fn sg_query_backend() -> SgBackend {
+    unsafe {
+        ffi::sg_query_backend()
     }
 }
 

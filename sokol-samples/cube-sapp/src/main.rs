@@ -77,8 +77,8 @@ impl SApp for Cube {
             },
         );
 
-        let (vs_src, fs_src) = match sg_api() {
-            SgApi::Direct3D11 => (
+        let (vs_src, fs_src) = match sg_query_backend() {
+            SgBackend::D3D11 => (
                 "cbuffer params: register(b0) {
                   float4x4 mvp;
                 };
@@ -100,7 +100,7 @@ impl SApp for Cube {
                   return color;
                 }"
             ),
-            SgApi::Metal => (
+            SgBackend::MetalMacOS => (
                 "#include <metal_stdlib>
                 using namespace metal;
                 struct params_t {
@@ -126,7 +126,7 @@ impl SApp for Cube {
                   return color;
                 }"
             ),
-            SgApi::OpenGL33 => (
+            SgBackend::GLCORE33 => (
                 "#version 330
                 uniform mat4 mvp;
                 in vec4 position;
@@ -142,7 +142,8 @@ impl SApp for Cube {
                 void main() {
                   frag_color = color;
                 }"
-            )
+            ),
+            _ => panic!()
         };
 
         let shd = sg_make_shader(
@@ -280,7 +281,7 @@ fn main() {
         ..Default::default()
     };
 
-    let title = format!("cube-sapp.rs ({:?})", sg_api());
+    let title = format!("cube-sapp.rs ({:?})", sg_query_backend());
 
     let exit_code = sapp_run(
         cube,

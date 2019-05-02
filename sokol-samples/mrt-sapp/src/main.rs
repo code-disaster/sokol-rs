@@ -143,8 +143,8 @@ impl SApp for MRT {
             },
         );
 
-        let (cube_vs_src, cube_fs_src) = match sg_api() {
-            SgApi::Direct3D11 => (
+        let (cube_vs_src, cube_fs_src) = match sg_query_backend() {
+            SgBackend::D3D11 => (
                 "cbuffer params: register(b0) {
                   float4x4 mvp;
                 };
@@ -175,7 +175,7 @@ impl SApp for MRT {
                   return outp;
                 }"
             ),
-            SgApi::Metal => (
+            SgBackend::MetalMacOS => (
                 "#include <metal_stdlib>
                 using namespace metal;
                 struct params_t {
@@ -210,7 +210,7 @@ impl SApp for MRT {
                   return out;
                 }"
             ),
-            SgApi::OpenGL33 => (
+            SgBackend::GLCORE33 => (
                 "#version 330
                 uniform mat4 mvp;
                 in vec4 position;
@@ -230,7 +230,8 @@ impl SApp for MRT {
                   frag_color_1 = vec4(0.0, bright, 0.0, 1.0);
                   frag_color_2 = vec4(0.0, 0.0, bright, 1.0);
                 }"
-            )
+            ),
+            _ => panic!()
         };
 
         let cube_shd = sg_make_shader(
@@ -332,8 +333,8 @@ impl SApp for MRT {
             },
         );
 
-        let (fsq_vs_src, fsq_fs_src) = match sg_api() {
-            SgApi::Direct3D11 => (
+        let (fsq_vs_src, fsq_fs_src) = match sg_query_backend() {
+            SgBackend::D3D11 => (
                 "cbuffer params {
                   float2 offset;
                 };
@@ -373,7 +374,7 @@ impl SApp for MRT {
                   return c;
                 }"
             ),
-            SgApi::Metal => (
+            SgBackend::MetalMacOS => (
                 "#include <metal_stdlib>
                 using namespace metal;
                 struct params_t {
@@ -414,7 +415,7 @@ impl SApp for MRT {
                   return float4(c0 + c1 + c2, 1.0);
                 }"
             ),
-            SgApi::OpenGL33 => (
+            SgBackend::GLCORE33 => (
                 "#version 330
                 uniform vec2 offset;
                 in vec2 pos;
@@ -441,7 +442,8 @@ impl SApp for MRT {
                   vec3 c2 = texture(tex2, uv2).xyz;
                   frag_color = vec4(c0 + c1 + c2, 1.0);
                 }"
-            )
+            ),
+            _ => panic!()
         };
 
         let fsq_shd = sg_make_shader(
@@ -521,8 +523,8 @@ impl SApp for MRT {
             ..Default::default()
         };
 
-        let (dbg_vs_src, dbg_fs_src) = match sg_api() {
-            SgApi::Direct3D11 => (
+        let (dbg_vs_src, dbg_fs_src) = match sg_query_backend() {
+            SgBackend::D3D11 => (
                 "struct vs_in {
                   float2 pos: POSITION;
                 };
@@ -542,7 +544,7 @@ impl SApp for MRT {
                   return float4(tex.Sample(smp, uv).xyz, 1.0);
                 }"
             ),
-            SgApi::Metal => (
+            SgBackend::MetalMacOS => (
                 "#include <metal_stdlib>
                 using namespace metal;
                 struct vs_in {
@@ -564,7 +566,7 @@ impl SApp for MRT {
                   return float4(tex.sample(smp, uv).xyz, 1.0);
                 }"
             ),
-            SgApi::OpenGL33 => (
+            SgBackend::GLCORE33 => (
                 "#version 330
                 in vec2 pos;
                 out vec2 uv;
@@ -579,7 +581,8 @@ impl SApp for MRT {
                 void main() {
                   frag_color = vec4(texture(tex,uv).xyz, 1.0);
                 }"
-            )
+            ),
+            _ => panic!()
         };
 
         self.dbg_pipeline = sg_make_pipeline(&SgPipelineDesc {
@@ -723,7 +726,7 @@ fn main() {
         ry: 0.0,
     };
 
-    let title = format!("mrt-sapp.rs ({:?})", sg_api());
+    let title = format!("mrt-sapp.rs ({:?})", sg_query_backend());
 
     let exit_code = sapp_run(
         mrt_app,
