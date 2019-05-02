@@ -1,5 +1,8 @@
+use std::os::raw::c_char;
+
 use sokol::app::SAppEvent;
 use sokol::gfx::SgPixelFormat;
+use sys::imgui::ffi::*;
 
 pub mod ffi {
     use std::ffi::CString;
@@ -42,8 +45,6 @@ pub mod ffi {
         pub fn simgui_render();
         pub fn simgui_handle_event(event: *const SAppEvent) -> bool;
         pub fn simgui_shutdown();
-
-        pub fn simgui_show_demo_window(is_open: *mut bool);
     }
 }
 
@@ -88,8 +89,38 @@ pub fn simgui_shutdown() {
     }
 }
 
-pub fn simgui_show_demo_window(is_open: &mut bool) {
+pub fn imgui_begin_main_menu_bar() -> bool {
     unsafe {
-        ffi::simgui_show_demo_window(is_open);
+        ig_begin_main_menu_bar()
+    }
+}
+
+pub fn imgui_end_main_menu_bar() {
+    unsafe {
+        ig_end_main_menu_bar();
+    }
+}
+
+pub fn imgui_begin_menu(name: &str) -> bool {
+    unsafe {
+        ig_begin_menu(name.as_ptr() as *const c_char)
+    }
+}
+
+pub fn imgui_menu_item(name: &str, p_open: &mut bool) {
+    unsafe {
+        ig_menu_item(name.as_ptr() as *const c_char, p_open);
+    }
+}
+
+pub fn imgui_end_menu() {
+    unsafe {
+        ig_end_menu();
+    }
+}
+
+pub fn imgui_show_demo_window(is_open: &mut bool) {
+    unsafe {
+        ig_show_demo_window(is_open);
     }
 }

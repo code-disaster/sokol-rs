@@ -9,3 +9,4 @@ license = "Zlib"
 
 [dependencies]
 sokol = { version = "0.4.0", path = "../sokol" }
+sokol-sys = { version = "0.4.0", path = "../sokol-sys" }

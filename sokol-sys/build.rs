@@ -136,6 +136,7 @@ fn make_sokol_imgui() {
     // source files
     //
     build.files(&[
+        "src/imgui.cc",
         "src/sokol_imgui.cc",
         "external/imgui/imgui.cpp",
         "external/imgui/imgui_demo.cpp",

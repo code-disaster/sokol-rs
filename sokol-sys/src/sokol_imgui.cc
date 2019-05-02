@@ -10,10 +10,6 @@
 #define SOKOL_GFX_IMGUI_IMPL
 #include <sokol_gfx_imgui.h>
 
-extern "C" void simgui_show_demo_window(bool* p_open) {
-    ImGui::ShowDemoWindow(p_open);
-}
-
 typedef struct {
     sg_imgui_t* content;
     bool buffers;
@@ -41,5 +37,13 @@ extern "C" void sg_imgui_wrap_draw(sg_imgui_wrap_t* ctx) {
     ctx->content->pipelines.open = ctx->pipelines;
     ctx->content->passes.open = ctx->passes;
     ctx->content->capture.open = ctx->capture;
+
     sg_imgui_draw(ctx->content);
+
+    ctx->buffers = ctx->content->buffers.open;
+    ctx->images = ctx->content->images.open;
+    ctx->shaders = ctx->content->shaders.open;
+    ctx->pipelines = ctx->content->pipelines.open;
+    ctx->passes = ctx->content->passes.open;
+    ctx->capture = ctx->content->capture.open;
 }
