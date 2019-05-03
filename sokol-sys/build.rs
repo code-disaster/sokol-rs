@@ -163,6 +163,9 @@ fn make_sokol_imgui() {
         .flag_if_supported("-Wno-unused-parameter");
 
     build
+        .flag_if_supported("-std=c++11");
+
+    build
         .cpp(true)
         .compile("sokol-sys-imgui");
 }
