@@ -1,4 +1,5 @@
 use std::os::raw::c_char;
+use std::ptr::null;
 
 use sokol::app::SAppEvent;
 use sokol::gfx::SgPixelFormat;
@@ -101,15 +102,20 @@ pub fn imgui_end_main_menu_bar() {
     }
 }
 
-pub fn imgui_begin_menu(name: &str) -> bool {
+pub fn imgui_begin_menu(label: &str, enabled: bool) -> bool {
     unsafe {
-        ig_begin_menu(name.as_ptr() as *const c_char)
+        ig_begin_menu(label.as_ptr() as *const c_char, enabled)
     }
 }
 
-pub fn imgui_menu_item(name: &str, p_open: &mut bool) {
+pub fn imgui_menu_item(label: &str, shortcut: Option<&str>, p_selected: &mut bool, enabled: bool) {
     unsafe {
-        ig_menu_item(name.as_ptr() as *const c_char, p_open);
+        let l = label.as_ptr() as *const c_char;
+        let s = match shortcut {
+            Some(s) => s.as_ptr() as *const c_char,
+            None => null()
+        };
+        ig_menu_item(l, s, p_selected, enabled);
     }
 }
 

@@ -9,12 +9,12 @@ extern "C" void ig_end_main_menu_bar() {
     ImGui::EndMainMenuBar();
 }
 
-extern "C" bool ig_begin_menu(const char* name) {
-    return ImGui::BeginMenu(name);
+extern "C" bool ig_begin_menu(const char* label, bool enabled) {
+    return ImGui::BeginMenu(label, enabled);
 }
 
-extern "C" void ig_menu_item(const char* name, bool* p_open) {
-    ImGui::MenuItem(name, 0, p_open);
+extern "C" void ig_menu_item(const char* label, const char* shortcut, bool* p_selected, bool enabled) {
+    ImGui::MenuItem(label, shortcut, p_selected, enabled);
 }
 
 extern "C" void ig_end_menu() {

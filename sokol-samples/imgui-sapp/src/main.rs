@@ -13,6 +13,7 @@ struct ImGuiDemo {
     frame_time: u64,
     sg_imgui_ctx: SgImGui,
     imgui_demo_window: bool,
+    enable_sg_imgui_menu: bool,
 }
 
 impl SApp for ImGuiDemo {
@@ -37,17 +38,18 @@ impl SApp for ImGuiDemo {
         simgui_new_frame(sapp_width(), sapp_height(), stm_sec(laptime));
 
         if imgui_begin_main_menu_bar() {
-            if imgui_begin_menu(cstr!("demo")) {
-                imgui_menu_item(cstr!("ImGui Demo Window"), &mut self.imgui_demo_window);
+            if imgui_begin_menu(cstr!("demo"), true) {
+                imgui_menu_item(cstr!("ImGui Demo Window"), None, &mut self.imgui_demo_window, true);
+                imgui_menu_item(cstr!("Enable sokol-gfx menu"), Some(cstr!("CTRL+D")), &mut self.enable_sg_imgui_menu, true);
                 imgui_end_menu()
             }
-            if imgui_begin_menu(cstr!("sokol-gfx")) {
-                imgui_menu_item(cstr!("Buffers"), &mut self.sg_imgui_ctx.buffers);
-                imgui_menu_item(cstr!("Images"), &mut self.sg_imgui_ctx.images);
-                imgui_menu_item(cstr!("Shader"), &mut self.sg_imgui_ctx.shaders);
-                imgui_menu_item(cstr!("Pipelines"), &mut self.sg_imgui_ctx.pipelines);
-                imgui_menu_item(cstr!("Passes"), &mut self.sg_imgui_ctx.passes);
-                imgui_menu_item(cstr!("Capture"), &mut self.sg_imgui_ctx.capture);
+            if imgui_begin_menu(cstr!("sokol-gfx"), self.enable_sg_imgui_menu) {
+                imgui_menu_item(cstr!("Buffers"), None, &mut self.sg_imgui_ctx.buffers, true);
+                imgui_menu_item(cstr!("Images"), None, &mut self.sg_imgui_ctx.images, true);
+                imgui_menu_item(cstr!("Shader"), None, &mut self.sg_imgui_ctx.shaders, true);
+                imgui_menu_item(cstr!("Pipelines"), None, &mut self.sg_imgui_ctx.pipelines, true);
+                imgui_menu_item(cstr!("Passes"), None, &mut self.sg_imgui_ctx.passes, true);
+                imgui_menu_item(cstr!("Capture"), None, &mut self.sg_imgui_ctx.capture, true);
                 imgui_end_menu();
             }
             imgui_end_main_menu_bar();
@@ -104,6 +106,7 @@ fn main() {
         frame_time: 0,
         sg_imgui_ctx: SgImGui::new(),
         imgui_demo_window: true,
+        enable_sg_imgui_menu: true,
     };
 
     let title = format!("imgui-sapp.rs ({:?})", sg_query_backend());
