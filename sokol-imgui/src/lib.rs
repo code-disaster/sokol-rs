@@ -9,12 +9,5 @@ This crate provides a renderer backend and user input handler to
 extern crate sokol;
 extern crate sokol_sys as sys;
 
-#[macro_export]
-macro_rules! istr {
-    ($s:expr) => (
-        concat!($s, "\0")
-    )
-}
-
 pub mod gfx;
 pub mod imgui;

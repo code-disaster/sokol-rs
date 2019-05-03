@@ -1,5 +1,5 @@
-extern crate sokol;
 #[macro_use]
+extern crate sokol;
 extern crate sokol_imgui;
 
 use sokol::app::*;
@@ -37,17 +37,17 @@ impl SApp for ImGuiDemo {
         simgui_new_frame(sapp_width(), sapp_height(), stm_sec(laptime));
 
         if imgui_begin_main_menu_bar() {
-            if imgui_begin_menu(istr!("demo")) {
-                imgui_menu_item(istr!("ImGui Demo Window"), &mut self.imgui_demo_window);
+            if imgui_begin_menu(cstr!("demo")) {
+                imgui_menu_item(cstr!("ImGui Demo Window"), &mut self.imgui_demo_window);
                 imgui_end_menu()
             }
-            if imgui_begin_menu(istr!("sokol-gfx")) {
-                imgui_menu_item(istr!("Buffers"), &mut self.sg_imgui_ctx.buffers);
-                imgui_menu_item(istr!("Images"), &mut self.sg_imgui_ctx.images);
-                imgui_menu_item(istr!("Shader"), &mut self.sg_imgui_ctx.shaders);
-                imgui_menu_item(istr!("Pipelines"), &mut self.sg_imgui_ctx.pipelines);
-                imgui_menu_item(istr!("Passes"), &mut self.sg_imgui_ctx.passes);
-                imgui_menu_item(istr!("Capture"), &mut self.sg_imgui_ctx.capture);
+            if imgui_begin_menu(cstr!("sokol-gfx")) {
+                imgui_menu_item(cstr!("Buffers"), &mut self.sg_imgui_ctx.buffers);
+                imgui_menu_item(cstr!("Images"), &mut self.sg_imgui_ctx.images);
+                imgui_menu_item(cstr!("Shader"), &mut self.sg_imgui_ctx.shaders);
+                imgui_menu_item(cstr!("Pipelines"), &mut self.sg_imgui_ctx.pipelines);
+                imgui_menu_item(cstr!("Passes"), &mut self.sg_imgui_ctx.passes);
+                imgui_menu_item(cstr!("Capture"), &mut self.sg_imgui_ctx.capture);
                 imgui_end_menu();
             }
             imgui_end_main_menu_bar();
