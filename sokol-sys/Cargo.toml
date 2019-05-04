@@ -2,10 +2,12 @@
 name = "sokol-sys"
 version = "0.4.0"
 authors = ["Daniel Ludwig <codi@code-disaster.com>"]
-description = "Low-level compilation units for the sokol header-only, cross-platform C libraries."
+description = "Compilation units for C/C++ libraries used by the sokol Rust bindings."
 repository = "https://github.com/code-disaster/sokol-rs"
 readme = "README.md"
 license = "Zlib"
+
+edition = "2018"
 
 build = "build.rs"
 

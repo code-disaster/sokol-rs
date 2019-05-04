@@ -7,6 +7,8 @@ repository = "https://github.com/code-disaster/sokol-rs"
 readme = "README.md"
 license = "Zlib"
 
+edition = "2018"
+
 [dependencies]
 sokol = { version = "0.4.0", path = "../sokol" }
 sokol-sys = { version = "0.4.0", path = "../sokol-sys" }

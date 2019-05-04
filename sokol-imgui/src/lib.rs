@@ -1,8 +1,10 @@
 /*!
 
-This crate provides a renderer backend and user input handler to
-[imgui-sys](https://crates.io/crates/imgui-sys). It is aimed to ease integration of
-[Dear ImGui](https://github.com/ocornut/imgui) for applications using the sokol API.
+Rust bindings to the `sokol_imgui` and `sokol_gfx_imgui` utility libraries for
+[sokol](https://github.com/floooh/sokol).
+
+This crate also exposes bindings to a very small subset of the
+[Dear ImGui](https://github.com/ocornut/imgui) library.
 
 */
 
