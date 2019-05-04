@@ -160,8 +160,7 @@ fn make_sokol_imgui() {
     // silence some warnings
     //
     build
-        .flag_if_supported("-Wno-unused-parameter")
-        .flag_if_supported("-Wno-format-truncation");
+        .flag_if_supported("-Wno-unused-parameter");
 
     build
         .flag_if_supported("-std=c++11");
