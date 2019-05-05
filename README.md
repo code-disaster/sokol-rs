@@ -6,6 +6,7 @@ This repository contains source code of the following Rust library crates:
 - sokol-imgui ([README](sokol-imgui/)) - Rust bindings to the `sokol_imgui` and `sokol_gfx_imgui` utility libraries.
 - sokol-sys ([README](sokol-sys/)) - system crate to compile native dependencies shared by other crates.
 
+To complement the crates above: 
 
 - sokol-stb - a library for easy access to a _subset_ of the [stb][stb] libraries.
 - sokol-samples - a number of examples ported from [sokol-samples][sokol-samples].
@@ -60,7 +61,9 @@ In the Rust library, the `app`, `gfx` and `audio` modules are not as separable a
 
 ### Status
 
-C library | Rust module | status | notes
+The following libraries are implemented:
+
+header | Rust module | status | notes
 :---: | :---: | :---: | ---
 [sokol_app.h](https://github.com/floooh/sokol/blob/master/sokol_app.h) | `sokol::app` | done |
 [sokol_args.h](https://github.com/floooh/sokol/blob/master/sokol_args.h) | n/a | n/a | _low priority_: there are many cmdline parsers for Rust already
@@ -68,11 +71,13 @@ C library | Rust module | status | notes
 [sokol_gfx.h](https://github.com/floooh/sokol/blob/master/sokol_gfx.h) | `sokol::gfx` | mostly done | trace hooks are enabled (and consumed by the `sokol_gfx_imgui` implementation in the sokol-imgui crate)<br><br>_missing_: separate resource management, render contexts, user-provided buffers<br><br>_not implemented_: `sg_query_*_info()` functions  
 [sokol_time.h](https://github.com/floooh/sokol/blob/master/sokol_time.h) | `sokol::time` | done |
 
-C util library | Rust module | status | notes
+Additionally, some utility libraries are available:
+
+header | Rust module | status | notes
 :---: | :---: | :---: | ---
-sokol_imgui | `sokol_imgui::imgui` | done |
-sokol_gl | n/a | n/a | _no plans yet_
-sokol_gfx_imgui | `sokol_imgui::gfx` | partially<br>done | `sg_imgui_t` is wrapped opaquely instead of replicated in Rust<br><br>_missing_: `sg_imgui_draw_*_content` and `sg_imgui_draw_*_window` functions
+[sokol_gfx_imgui.h](https://github.com/floooh/sokol/blob/master/util/sokol_gfx_imgui.h) | `sokol_imgui::gfx` | partially<br>done | `sg_imgui_t` is wrapped opaquely instead of replicated in Rust<br><br>_missing_: `sg_imgui_draw_*_content` and `sg_imgui_draw_*_window` functions
+[sokol_gl.h](https://github.com/floooh/sokol/blob/master/util/sokol_gl.h) | n/a | n/a | _no plans yet_
+[sokol_imgui.h](https://github.com/floooh/sokol/blob/master/util/sokol_imgui.h) | `sokol_imgui::imgui` | done |
 
 ### Remarks
 
