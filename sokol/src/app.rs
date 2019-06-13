@@ -21,10 +21,11 @@ pub mod ffi {
     #[repr(C)]
     #[derive(Copy, Clone, Debug)]
     pub struct SAppEvent {
+        frame_count: u64,
         event_type: super::SAppEventType,
-        frame_count: u32,
         key_code: super::SAppKeycode,
         char_code: u32,
+        key_repeat: bool,
         modifiers: super::SAppModifier,
         mouse_button: super::SAppMouseButton,
         mouse_x: f32,
@@ -42,10 +43,11 @@ pub mod ffi {
     impl SAppEvent {
         pub fn translate(event: &super::SAppEvent) -> Self {
             SAppEvent {
-                event_type: event.event_type,
                 frame_count: event.frame_count,
+                event_type: event.event_type,
                 key_code: event.key_code,
                 char_code: event.char_code,
+                key_repeat: event.key_repeat,
                 modifiers: event.modifiers,
                 mouse_button: event.mouse_button,
                 mouse_x: event.mouse_x,
@@ -92,6 +94,7 @@ pub mod ffi {
         html5_canvas_resize: bool,
         html5_preserve_drawing_buffer: bool,
         html5_premultiplied_alpha: bool,
+        html5_ask_leave_site: bool,
         ios_keyboard_resizes_canvas: bool,
         gl_force_gles2: bool,
     }
@@ -107,6 +110,11 @@ pub mod ffi {
         pub fn sapp_dpi_scale() -> f32;
         pub fn sapp_show_keyboard(visible: bool);
         pub fn sapp_keyboard_shown() -> bool;
+        pub fn sapp_userdata() -> *mut c_void;
+        pub fn sapp_request_quit();
+        pub fn sapp_cancel_quit();
+        pub fn sapp_quit();
+        pub fn sapp_frame_count() -> u64;
 
         pub fn sapp_gles2() -> bool;
 
@@ -121,10 +129,6 @@ pub mod ffi {
         pub fn sapp_d3d11_get_render_target_view() -> *const c_void;
         pub fn sapp_d3d11_get_depth_stencil_view() -> *const c_void;
         pub fn sapp_win32_get_hwnd() -> *const c_void;
-
-        /// Helper function to retrieve the "user_data" pointer, which
-        /// points to our `SAppImpl` instance.
-        pub fn sapp_get_userdata() -> *mut c_void;
     }
 
     pub fn sapp_make_desc(app: &super::SAppImpl) -> SAppDesc {
@@ -162,6 +166,7 @@ pub mod ffi {
             html5_canvas_resize: desc.html5_canvas_resize,
             html5_preserve_drawing_buffer: desc.html5_preserve_drawing_buffer,
             html5_premultiplied_alpha: desc.html5_premultiplied_alpha,
+            html5_ask_leave_site: desc.html5_ask_leave_site,
             ios_keyboard_resizes_canvas: desc.ios_keyboard_resizes_canvas,
             gl_force_gles2: desc.gl_force_gles2,
         }
@@ -189,10 +194,11 @@ pub mod ffi {
         };
 
         super::SAppImpl::get(user_data).event_cb(super::SAppEvent {
-            event_type: e.event_type,
             frame_count: e.frame_count,
+            event_type: e.event_type,
             key_code: e.key_code,
             char_code: e.char_code,
+            key_repeat: e.key_repeat,
             modifiers: e.modifiers,
             mouse_button: e.mouse_button,
             mouse_x: e.mouse_x,
@@ -251,6 +257,7 @@ pub enum SAppEventType {
     Suspended,
     Resumed,
     UpdateCursor,
+    QuitRequested,
 }
 
 #[repr(C)]
@@ -409,10 +416,11 @@ pub struct SAppTouchPoint {
 
 #[derive(Debug)]
 pub struct SAppEvent {
+    pub frame_count: u64,
     pub event_type: SAppEventType,
-    pub frame_count: u32,
     pub key_code: SAppKeycode,
     pub char_code: u32,
+    pub key_repeat: bool,
     pub modifiers: SAppModifier,
     pub mouse_button: SAppMouseButton,
     pub mouse_x: f32,
@@ -443,6 +451,7 @@ pub struct SAppDesc {
     pub html5_canvas_resize: bool,
     pub html5_preserve_drawing_buffer: bool,
     pub html5_premultiplied_alpha: bool,
+    pub html5_ask_leave_site: bool,
     pub ios_keyboard_resizes_canvas: bool,
     pub gl_force_gles2: bool,
 }
@@ -572,6 +581,30 @@ pub fn sapp_show_keyboard(visible: bool) {
 pub fn sapp_keyboard_shown() -> bool {
     unsafe {
         ffi::sapp_keyboard_shown()
+    }
+}
+
+pub fn sapp_request_quit() {
+    unsafe {
+        ffi::sapp_request_quit();
+    }
+}
+
+pub fn sapp_cancel_quit() {
+    unsafe {
+        ffi::sapp_cancel_quit();
+    }
+}
+
+pub fn sapp_quit() {
+    unsafe {
+        ffi::sapp_quit();
+    }
+}
+
+pub fn sapp_frame_count() -> u64 {
+    unsafe {
+        ffi::sapp_frame_count()
     }
 }
 

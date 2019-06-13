@@ -6,7 +6,3 @@
 #include <sokol_audio.h>
 #include <sokol_gfx.h>
 #include <sokol_time.h>
-
-SOKOL_API_DECL void* sapp_get_userdata(void) {
-    return _sapp.desc.user_data;
-}

@@ -25,6 +25,7 @@ pub mod ffi {
         pub fn saudio_setup(desc: *const SAudioDesc);
         pub fn saudio_shutdown();
         pub fn saudio_isvalid() -> bool;
+        pub fn saudio_userdata() -> *mut c_void;
         pub fn saudio_sample_rate() -> c_int;
         //pub fn saudio_buffer_size() -> c_int;
         pub fn saudio_channels() -> c_int;
@@ -34,7 +35,7 @@ pub mod ffi {
 
     pub fn saudio_make_desc(desc: super::SAudioDesc) -> SAudioDesc {
         let app_ptr = unsafe {
-            super::super::app::ffi::sapp_get_userdata()
+            super::super::app::ffi::sapp_userdata()
         };
 
         SAudioDesc {

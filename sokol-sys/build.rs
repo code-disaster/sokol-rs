@@ -28,7 +28,6 @@ fn select_sokol_gfx_renderer(build: &mut Build, is_msvc: bool, is_impl: bool) {
 
     if is_impl {
         if cfg!(target_os = "windows") && is_msvc {
-            build.flag("-DSOKOL_D3D11_SHADER_COMPILER");
             println!("cargo:rustc-cfg=gfx=\"d3d11\"");
         } else if cfg!(target_os = "macos") {
             println!("cargo:rustc-cfg=gfx=\"metal\"");
