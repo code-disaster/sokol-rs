@@ -20,7 +20,7 @@ mod ffi {
     const _SG_NUM_SHADER_STAGES: usize = 2;
     const SG_NUM_INFLIGHT_FRAMES: usize = 2;
     const SG_MAX_COLOR_ATTACHMENTS: usize = 4;
-    const SG_MAX_SHADERSTAGE_BUFFERS: usize = 4;
+    const SG_MAX_SHADERSTAGE_BUFFERS: usize = 8;
     const SG_MAX_SHADERSTAGE_IMAGES: usize = 12;
     const SG_MAX_SHADERSTAGE_UBS: usize = 4;
     const SG_MAX_UB_MEMBERS: usize = 16;
